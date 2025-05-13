@@ -4,10 +4,10 @@ TARGET				=	plazza
 CXX					=	g++
 CXXFLAGS			=	-Wall -Wextra -std=gnu++20
 LDFLAGS				=
-INCLUDES			=	-ISource
+INCLUDES			=	-IPlazza
 FLAGS				=	$(CXXFLAGS) $(LDFLAGS) $(INCLUDES)
 
-SOURCES				=	$(shell find Source -type f -iname "*.cpp")
+SOURCES				=	$(shell find Plazza -type f -iname "*.cpp")
 OBJECTS				=	$(SOURCES:.cpp=.o)
 
 all: $(TARGET)
