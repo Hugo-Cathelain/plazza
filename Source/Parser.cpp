@@ -76,6 +76,7 @@ std::vector<Order> Parser::parseOrder(const std::string& order)
                 static const std::map<std::string, PizzaSize> PIZZA_SIZES = {};
                 static const std::map<std::string, PizzaType> PIZZA_TYPES = {};
 
+                orders.push_back(order);
             }
         }
     }
