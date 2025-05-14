@@ -6,10 +6,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
-#include <chrono>
 #include <vector>
 #include "Cook.hpp"
 #include "Stock.hpp"
+#include "ThreadPool.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -30,6 +30,7 @@ public:
     std::vector<Plazza::Cook> cooks;        //<!
     Plazza::Stock stock;                    //<!
     float multiplier;                       //<!
+    Plazza::ThreadPool thread_pool;         //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -39,13 +40,7 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     Kitchen(int cook_nb = 1, float multiplier = 1.0f,
-        std::chrono::milliseconds restock_time)
-        : cooks(cook_nb)
-        , stock()
-        , multiplier(multiplier)
-    {
-        stock.restock_time = restock_time;
-    }
+        std::chrono::milliseconds restock_time);
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///

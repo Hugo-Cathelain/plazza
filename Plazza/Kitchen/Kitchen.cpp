@@ -12,12 +12,11 @@ namespace Plazza
 ///////////////////////////////////////////////////////////////////////////////
 Kitchen::Kitchen(int cook_nb, float multiplier,
     std::chrono::milliseconds restock_time)
-    : stock(restock_time)
-    , multiplier(multiplier)
+    : multiplier(multiplier)
 {
     for (int i = 0; i < cook_nb; ++i)
         cooks.push_back(Cook());
-    stock = Stock();
+    stock = Stock(restock_time);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
