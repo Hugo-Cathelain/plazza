@@ -26,7 +26,7 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     std::chrono::milliseconds restock_time;     //<!
-    enum Ingredient
+    enum Ingredients
     {
         DOUGH,                                  //<!
         TOMATO,                                 //<!
@@ -36,9 +36,10 @@ public:
         STEAK,                                  //<!
         EGGPLANT,                               //<!
         GOAT_CHEESE,                            //<!
-        CHIEF_LOVE                              //<!
+        CHIEF_LOVE,                             //<!
+        END_INGRED                              //<!
     };
-    std::map<Ingredient, int> stock;            //<!
+    std::map<Ingredients, int> stock;           //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
