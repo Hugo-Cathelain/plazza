@@ -13,10 +13,11 @@ namespace Plazza
 Kitchen::Kitchen(int cook_nb, float multiplier,
     std::chrono::milliseconds restock_time)
     : multiplier(multiplier)
+    , stock(restock_time)
+    , thread_pool()
 {
     for (int i = 0; i < cook_nb; ++i)
         cooks.push_back(Cook());
-    stock = Stock(restock_time);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

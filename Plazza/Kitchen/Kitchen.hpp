@@ -27,10 +27,10 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::vector<Plazza::Cook> cooks;        //<!
-    Plazza::Stock stock;                    //<!
     float multiplier;                       //<!
+    Plazza::Stock stock;                    //<!
     Plazza::ThreadPool thread_pool;         //<!
+    std::vector<Plazza::Cook> cooks;        //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
