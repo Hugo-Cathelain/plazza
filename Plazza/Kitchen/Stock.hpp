@@ -24,7 +24,21 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds restock_time;
+    std::chrono::milliseconds restock_time;     //<!
+    enum Ingredient
+    {
+        DOUGH,                                  //<!
+        TOMATO,                                 //<!
+        GRUYERE,                                //<!
+        HAM,                                    //<!
+        MUSHROOM,                               //<!
+        STEAK,                                  //<!
+        EGGPLANT,                               //<!
+        GOAT_CHEESE,                            //<!
+        CHIEF_LOVE                              //<!
+    };
+    int stock[9];                               //<!
+
 public:
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

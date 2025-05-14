@@ -12,7 +12,17 @@ namespace Plazza
 ///////////////////////////////////////////////////////////////////////////////
 Stock::Stock(std::chrono::milliseconds restock_time)
     : restock_time(restock_time)
-{}
+{
+    stock[DOUGH] = 5;
+    stock[TOMATO] = 5;
+    stock[GRUYERE] = 5;
+    stock[HAM] = 5;
+    stock[MUSHROOM] = 5;
+    stock[STEAK] = 5;
+    stock[EGGPLANT] = 5;
+    stock[GOAT_CHEESE] = 5;
+    stock[CHIEF_LOVE] = 5;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 Stock::~Stock()
