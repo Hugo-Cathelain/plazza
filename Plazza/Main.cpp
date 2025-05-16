@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
         std::cout << "Reception: Kitchen process started with PID: " << kitchenCp.GetPid() << std::endl;
 
         // Give the kitchen a moment to start and open its end of the pipe
-        sleep(1); // Not ideal for production, but simple for example
+        // sleep(1);
 
         try {
             Plazza::Pipe receptionPipe(RECEPTION_TO_KITCHEN_PIPE, Plazza::Pipe::OpenMode::WRITE_ONLY);
