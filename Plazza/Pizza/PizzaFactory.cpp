@@ -1,0 +1,43 @@
+///////////////////////////////////////////////////////////////////////////////
+// Dependencies
+///////////////////////////////////////////////////////////////////////////////
+#include "Pizza/PizzaFactory.hpp"
+#include "Pizza/Margarita.hpp"
+#include "Pizza/Americana.hpp"
+#include "Pizza/Regina.hpp"
+#include "Pizza/Fantasia.hpp"
+
+///////////////////////////////////////////////////////////////////////////////
+// Namespace Plazza
+///////////////////////////////////////////////////////////////////////////////
+namespace Plazza
+{
+
+///////////////////////////////////////////////////////////////////////////////
+PizzaFactory::PizzaFactory(void)
+{
+    RegisterPizza<Regina>("regina");
+    RegisterPizza<Fantasia>("fantasia");
+    RegisterPizza<Americana>("americana");
+    RegisterPizza<Margarita>("margarita");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::vector<std::string> PizzaFactory::GetFactoryList(void) const
+{
+    std::vector<std::string> factories;
+
+    for (const auto& [key, value] : m_factories)
+    {
+        factories.push_back(key);
+    }
+    return (factories);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+bool PizzaFactory::HasFactory(const std::string& type) const
+{
+    return (m_factories.count(type) != 0);
+}
+
+} // !namespace Plazza
