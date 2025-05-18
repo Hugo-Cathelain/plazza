@@ -1,26 +1,30 @@
 ///////////////////////////////////////////////////////////////////////////////
-/// Dependencies
+// Header guard
 ///////////////////////////////////////////////////////////////////////////////
-#include "Stock.hpp"
+#pragma once
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Namespace Plazza
+// Namespace Plazza
 ///////////////////////////////////////////////////////////////////////////////
 namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-Stock::Stock(std::chrono::milliseconds restockTime)
-    : restockTime(restockTime)
-{
-    for (int i = 0; i < static_cast<int>(Ingredient::SIZE); i++)
-    {
-        stock[static_cast<Ingredient>(i)] = 0;
-    }
-}
-
+/// \brief
+///
 ///////////////////////////////////////////////////////////////////////////////
-Stock::~Stock()
-{}
+enum class Ingredient
+{
+    DOUGH,              //<!
+    TOMATO,             //<!
+    GRUYERE,            //<!
+    HAM,                //<!
+    MUSHROOM,           //<!
+    STEAK,              //<!
+    EGGPLANT,           //<!
+    GOAT_CHEESE,        //<!
+    CHIEF_LOVE,         //<!
+    SIZE                //<!
+};
 
 } // !namespace Plazza

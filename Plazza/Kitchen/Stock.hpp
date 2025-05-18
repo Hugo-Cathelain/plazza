@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
+#include "Pizza/Ingredients.hpp"
 #include <chrono>
 #include <map>
 
@@ -25,30 +26,17 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds restock_time;     //<!
-    enum Ingredients
-    {
-        DOUGH,                                  //<!
-        TOMATO,                                 //<!
-        GRUYERE,                                //<!
-        HAM,                                    //<!
-        MUSHROOM,                               //<!
-        STEAK,                                  //<!
-        EGGPLANT,                               //<!
-        GOAT_CHEESE,                            //<!
-        CHIEF_LOVE,                             //<!
-        END_INGRED                              //<!
-    };
-    std::map<Ingredients, int> stock;           //<!
+    std::chrono::milliseconds restockTime;      //<!
+    std::map<Ingredient, int> stock;            //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
-    /// \param restock_time
+    /// \param restockTime
     ///
     ///////////////////////////////////////////////////////////////////////////
-    Stock(std::chrono::milliseconds restock_time);
+    Stock(std::chrono::milliseconds restockTime);
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
