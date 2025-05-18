@@ -71,12 +71,16 @@ float APizza::GetCookingTimeMultiplier(void)
 ///////////////////////////////////////////////////////////////////////////////
 IPizza::PackOutCome APizza::Pack(void) const
 {
+    return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 std::optional<std::unique_ptr<IPizza>> IPizza::Unpack(
     IPizza::PackOutCome packed
 )
-{}
+{
+    (void)packed;
+    return (std::nullopt);
+}
 
 } // !namespace Plazza

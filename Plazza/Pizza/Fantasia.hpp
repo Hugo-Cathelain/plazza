@@ -33,7 +33,7 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-    ~Fantasia() override;
+    virtual ~Fantasia() = default;
 };
 
 } // !namespace Plazza

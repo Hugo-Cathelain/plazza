@@ -33,7 +33,7 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-    ~Americana() override;
+    virtual ~Americana() = default;
 };
 
 } // !namespace Plazza

@@ -33,7 +33,7 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-    ~Regina() override;
+    virtual ~Regina() = default;
 };
 
 } // !namespace Plazza

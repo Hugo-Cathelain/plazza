@@ -33,7 +33,7 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-    ~Margarita() override;
+    virtual ~Margarita() = default;
 };
 
 } // !namespace Plazza

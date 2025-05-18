@@ -23,6 +23,19 @@ PizzaFactory::PizzaFactory(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<IPizza> PizzaFactory::CreatePizza(
+    const std::string& type,
+    IPizza::Size size
+)
+{
+    if (!HasFactory(type))
+    {
+        return (nullptr);
+    }
+    return (m_factories[type](size));
+}
+
+///////////////////////////////////////////////////////////////////////////////
 std::vector<std::string> PizzaFactory::GetFactoryList(void) const
 {
     std::vector<std::string> factories;
