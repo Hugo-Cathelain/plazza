@@ -184,4 +184,16 @@ pid_t Process::GetPid(void) const
     return (m_pid);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+bool Process::IsParent(void) const
+{
+    return (m_pid > 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+bool Process::IsChild(void) const
+{
+    return (m_pid == 0);
+}
+
 } // !namespace Plazza

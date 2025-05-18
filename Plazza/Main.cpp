@@ -2,6 +2,7 @@
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Reception/CLI.hpp"
+#include "Kitchen/Kitchen.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
@@ -10,6 +11,8 @@ int main(int argc, char* argv[])
 
     Plazza::Reception reception;
     Plazza::CLI cli(reception);
+
+    Plazza::Kitchen kitchen1;
 
     cli.Run();
 
