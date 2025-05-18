@@ -2,6 +2,7 @@
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Reception/Parser.hpp"
+#include "Pizza/PizzaFactory.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
@@ -81,8 +82,15 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
                     throw std::runtime_error("Invalid quantity format: " + numStr.substr(1));
                 }
 
+                PizzaFactory factory;
+
+                if (!factory.HasFactory(typeStr))
+                {
+                    throw std::runtime_error("Invalid pizza type: unknown type '" + typeStr + "'");
+                }
+
                 orders.push_back(std::make_tuple(
-                    IPizza(),
+                    factory.CreatePizza(typeStr, IPizza::Size::XL),
                     static_cast<unsigned int>(quantity))
                 );
             }
