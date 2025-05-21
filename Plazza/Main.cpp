@@ -6,6 +6,7 @@
 #include "Pizza/APizza.hpp"
 #include "Errors/InvalidArgument.hpp"
 #include <iostream>
+#include "Utils/Timer.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
 
     Plazza::APizza::SetCookingTimeMultiplier(cookingTimeMultiplier);
 
-    Plazza::Reception reception;
+    Plazza::Reception reception(std::chrono::milliseconds(ingredientRestockTimeMs), cooksPerKitchen);
     Plazza::CLI cli(reception);
 
     Plazza::Kitchen k1, k2, k3;

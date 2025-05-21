@@ -6,6 +6,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
+#include "Kitchen/Kitchen.hpp"
+#include "Utils/Timer.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -18,6 +20,22 @@ namespace Plazza
 ///
 ///////////////////////////////////////////////////////////////////////////////
 class Reception
-{};
+{
+private:
+    std::vector<std::unique_ptr<Kitchen>> m_kitchens;   //<!
+    std::chrono::milliseconds m_restockTime;            //<!
+    size_t m_cookCount;                                 //<!
+
+public:
+    Reception(std::chrono::milliseconds RestockTime, size_t CookCount);
+    ~Reception();
+
+public:
+
+    void NewKitchen(void);
+    void RemoveKitchen(Kitchen* kitchen);
+
+    void DisplayStatus(void);
+};
 
 } // !namespace Plazza
