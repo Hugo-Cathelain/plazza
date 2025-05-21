@@ -6,6 +6,7 @@
 #include "Pizza/Americana.hpp"
 #include "Pizza/Fantasia.hpp"
 #include "Pizza/Margarita.hpp"
+#include "Errors/InvalidArgument.hpp"
 #include <sstream>
 #include <stdexcept>
 
@@ -16,7 +17,7 @@ namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-float APizza::s_cookingTimeMultiplier = 1.0f;
+double APizza::s_cookingTimeMultiplier = 1.0f;
 
 ///////////////////////////////////////////////////////////////////////////////
 APizza::APizza(
@@ -58,18 +59,18 @@ const std::vector<Ingredient>& APizza::GetIngredients(void) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void APizza::SetCookingTimeMultiplier(float multiplier)
+void APizza::SetCookingTimeMultiplier(double multiplier)
 {
-    if (multiplier <= 0.0f)
+    if (multiplier <= 0.0)
     {
-        throw std::invalid_argument("Cooking time multiplier must be positive");
+        throw InvalidArgument("Cooking time multiplier must be positive");
     }
 
     s_cookingTimeMultiplier = multiplier;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-float APizza::GetCookingTimeMultiplier(void)
+double APizza::GetCookingTimeMultiplier(void)
 {
     return (s_cookingTimeMultiplier);
 }
