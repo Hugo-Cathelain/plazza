@@ -36,7 +36,7 @@ private:
     std::atomic<bool> m_running;                //<!
     std::atomic<int> m_activePizzaCount;        //<!
     std::atomic<int> m_cooksIdleCount;          //<!
-    Stock m_stock;
+    std::unique_ptr<Stock> m_stock;             //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////

@@ -2,6 +2,8 @@
 /// Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Stock.hpp"
+#include "Kitchen/Kitchen.hpp"
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Namespace Plazza
@@ -10,17 +12,27 @@ namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-Stock::Stock(std::chrono::milliseconds restockTime)
-    : restockTime(restockTime)
+Stock::Stock(std::chrono::milliseconds restockTime, Kitchen& kitchen)
+    : Thread(std::bind(&Stock::Routine, this))
+    , m_restockTime(restockTime)
+    , m_kitchen(kitchen)
 {
     for (int i = 0; i < static_cast<int>(Ingredient::SIZE); i++)
     {
-        stock[static_cast<Ingredient>(i)] = 5;
+        m_stock[static_cast<Ingredient>(i)] = 5;
     }
+
+    Start();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 Stock::~Stock()
 {}
+
+///////////////////////////////////////////////////////////////////////////////
+void Stock::Routine(void)
+{
+    std::cout << "Stock Thread started" << std::endl;
+}
 
 } // !namespace Plazza

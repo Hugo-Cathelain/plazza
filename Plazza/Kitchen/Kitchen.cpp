@@ -22,7 +22,6 @@ Kitchen::Kitchen(
     : Process(std::bind(&Kitchen::Routine, this))
     , m_restockTime(restockTime)
     , m_multiplier(multiplier)
-    , m_stock(restockTime)
 {
     Start();
 }
@@ -34,7 +33,8 @@ Kitchen::~Kitchen()
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::Routine(void)
 {
-
+    std::cout << "Hello From Kitchen" << std::endl;
+    m_stock = std::make_unique<Stock>(m_restockTime, *this);
 }
 
 } // !namespace Plazza
