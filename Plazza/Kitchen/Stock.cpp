@@ -15,7 +15,7 @@ Stock::Stock(std::chrono::milliseconds restockTime)
 {
     for (int i = 0; i < static_cast<int>(Ingredient::SIZE); i++)
     {
-        stock[static_cast<Ingredient>(i)] = 0;
+        stock[static_cast<Ingredient>(i)] = 5;
     }
 }
 
