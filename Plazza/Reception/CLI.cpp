@@ -3,6 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "Reception/CLI.hpp"
 #include "Reception/Parser.hpp"
+#include "Errors/ParsingException.hpp"
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,9 +80,9 @@ void CLI::ProcessCommand(const std::string& line)
                 // TODO: Add reception HandleOrder
             }
         }
-        catch (const std::runtime_error& e)
+        catch (const ParsingException& e)
         {
-            std::cerr << "Error: " << e.what() << std::endl;
+            std::cerr << e.what() << std::endl;
         }
     }
 }

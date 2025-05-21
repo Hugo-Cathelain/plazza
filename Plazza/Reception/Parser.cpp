@@ -3,6 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "Reception/Parser.hpp"
 #include "Pizza/PizzaFactory.hpp"
+#include "Errors/ParsingException.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
@@ -40,7 +41,7 @@ IPizza::Size Parser::StringToPizzaSize(const std::string& str)
     if (str == "L") return (IPizza::Size::L);
     if (str == "XL") return (IPizza::Size::XL);
     if (str == "XXL") return (IPizza::Size::XXL);
-    throw std::runtime_error("Invalid p izza size string: " + str);
+    throw ParsingException("Invalid p izza size string: " + str);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,7 +64,9 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
 
         if (trimmedSegment.empty())
         {
-            throw std::runtime_error("Invalid order format: empty segment found in order list.");
+            throw ParsingException(
+                "Invalid order format: empty segment found in order list."
+            );
         };
 
         std::smatch match;
@@ -81,23 +84,32 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
                     quantity = std::stoi(numStr.substr(1));
                     if (quantity <= 0)
                     {
-                        throw std::runtime_error("Invalid quantity: must be a positive integer.");
+                        throw ParsingException(
+                            "Invalid quantity: must be a positive integer."
+                        );
                     }
                 }
                 catch (const std::out_of_range& oor)
                 {
-                    throw std::runtime_error("Invalid quantity: number too large. " + numStr.substr(1));
+                    throw ParsingException(
+                        "Invalid quantity: number too large. " +
+                        numStr.substr(1)
+                    );
                 }
                 catch (const std::invalid_argument& ia)
                 {
-                    throw std::runtime_error("Invalid quantity format: " + numStr.substr(1));
+                    throw ParsingException(
+                        "Invalid quantity format: " + numStr.substr(1)
+                    );
                 }
 
                 PizzaFactory& factory = PizzaFactory::GetInstance();
 
                 if (!factory.HasFactory(typeStr))
                 {
-                    throw std::runtime_error("Invalid pizza type: unknown type '" + typeStr + "'");
+                    throw ParsingException(
+                        "Invalid pizza type: unknown type '" + typeStr + "'"
+                    );
                 }
 
                 IPizza::Size pizzaSize = StringToPizzaSize(sizeStr);
@@ -109,18 +121,27 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
             }
             else
             {
-                throw std::runtime_error("Internal parser error: regex match failed unexpectedly for segment: " + trimmedSegment);
+                throw ParsingException(
+                    "Internal parser error: regex match " +
+                    ("failed unexpectedly for segment: " + trimmedSegment)
+                );
             }
         }
         else
         {
-            throw std::runtime_error("Invalid order format for segment: '" + trimmedSegment + "'. Expected format: TYPE SIZE xNUMBER");
+            throw ParsingException(
+                "Invalid order format for segment: '" +
+                trimmedSegment +
+                "'. Expected format: TYPE SIZE xNUMBER"
+            );
         }
     }
 
     if (orders.empty() && !trimmedLine.empty())
     {
-        throw std::runtime_error("Invalid order format: No valid orders found in non-empty input.");
+        throw ParsingException(
+            "Invalid order format: No valid orders found in non-empty input."
+        );
     }
 
     return (orders);
