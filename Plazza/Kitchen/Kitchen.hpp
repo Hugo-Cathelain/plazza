@@ -12,12 +12,7 @@
 #include "Kitchen/ThreadPool.hpp"
 #include <vector>
 #include <memory>
-
-#ifdef PLAZZA_BONUS
-    #include <SFML/Graphics.hpp>
-    #include <SFML/Window.hpp>
-    #include <SFML/System.hpp>
-#endif
+#include <atomic>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -35,15 +30,13 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    float m_multiplier;                     //<!
-    Stock m_stock;                          //<!
-    ThreadPool m_pool;                      //<!
-    std::vector<Cook> m_cooks;              //<!
-
-#ifdef PLAZZA_BONUS
-    // BONUS
-    std::unique_ptr<sf::RenderWindow> m_window;
-#endif
+    std::chrono::milliseconds m_restockTime;    //<!
+    double m_multiplier;                        //<!
+    size_t m_cookCount;                         //<!
+    std::atomic<bool> m_running;                //<!
+    std::atomic<int> m_activePizzaCount;        //<!
+    std::atomic<int> m_cooksIdleCount;          //<!
+    Stock m_stock;
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -56,7 +49,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     Kitchen(
         size_t numberOfCooks = 1,
-        float multiplier = 1.0f,
+        double multiplier = 1.0,
         std::chrono::milliseconds restockTime = std::chrono::milliseconds(1000)
     );
 
