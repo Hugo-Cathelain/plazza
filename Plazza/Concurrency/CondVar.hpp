@@ -100,7 +100,7 @@ protected:
     virtual void DoWaitFor(
         IMutex& mutex,
         const std::chrono::milliseconds& relTime
-    ) = 0;
+    ) override;
 };
 
 } // !namespace Plazza
