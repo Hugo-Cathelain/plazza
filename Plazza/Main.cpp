@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
         return (84);
     }
 
-    float cookingTimeMultiplier;
+    double cookingTimeMultiplier;
     int cooksPerKitchen;
     long long ingredientRestockTimeMs;
 
     try
     {
         size_t pos;
-        cookingTimeMultiplier = std::stof(argv[1], &pos);
+        cookingTimeMultiplier = std::stod(argv[1], &pos);
         if (pos != std::string(argv[1]).length())
         {
             throw Plazza::InvalidArgument("Invalid multiplier format");
