@@ -30,20 +30,6 @@ Kitchen::Kitchen(
     }
 
     Start();
-
-    Pipe pipe("/tmp/plazza_reception_to_kitchen", Pipe::OpenMode::WRITE_ONLY);
-
-    pipe.Open();
-
-    Message msg(Message::Type::ORDER_PIZZA);
-
-    msg.SetPayloadFromString("Regina XXL x1; Fantasia S x2");
-
-    pipe << msg;
-
-    pipe.Close();
-
-    pipe.RemoveResource();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,19 +39,27 @@ Kitchen::~Kitchen()
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::Routine(void)
 {
-    Pipe pipe("/tmp/plazza_reception_to_kitchen", Pipe::OpenMode::READ_ONLY);
+#ifdef PLAZZA_BONUS
+    m_window = std::make_unique<sf::RenderWindow>(
+        sf::VideoMode(200, 200), "Kitchen", sf::Style::Default
+    );
 
-    pipe.Open();
+    sf::Event event;
+    while (m_window->isOpen())
+    {
+        while (m_window->pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                m_window->close();
+            }
+        }
 
-    Message msg;
+        m_window->clear();
 
-    pipe >> msg;
-
-    std::cout << "Kitchen: Received message!" << std::endl;
-    std::cout << "Kitchen: Message Type: " << static_cast<int>(msg.type) << std::endl;
-    std::cout << "Kitchen: Message Payload: \"" << msg.GetPayloadAsString() << "\"" << std::endl;
-
-    pipe.Close();
+        m_window->display();
+    }
+#endif
 }
 
 } // !namespace Plazza

@@ -18,6 +18,9 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CXX) -o $(TARGET) $(OBJECTS) $(FLAGS)
 
+bonus: LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system -DPLAZZA_BONUS
+bonus: re
+
 clean:
 	find -type f -iname "*.o" -delete
 	find -type f -iname "*.d" -delete

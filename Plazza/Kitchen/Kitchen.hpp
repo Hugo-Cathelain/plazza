@@ -11,6 +11,13 @@
 #include "Kitchen/Stock.hpp"
 #include "Kitchen/ThreadPool.hpp"
 #include <vector>
+#include <memory>
+
+#ifdef PLAZZA_BONUS
+    #include <SFML/Graphics.hpp>
+    #include <SFML/Window.hpp>
+    #include <SFML/System.hpp>
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -32,6 +39,11 @@ private:
     Stock m_stock;                          //<!
     ThreadPool m_pool;                      //<!
     std::vector<Cook> m_cooks;              //<!
+
+#ifdef PLAZZA_BONUS
+    // BONUS
+    std::unique_ptr<sf::RenderWindow> m_window;
+#endif
 
 public:
     ///////////////////////////////////////////////////////////////////////////

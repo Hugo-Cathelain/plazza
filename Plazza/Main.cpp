@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     Plazza::Reception reception;
     Plazza::CLI cli(reception);
 
-    Plazza::Kitchen kitchen1;
+    Plazza::Kitchen k1, k2, k3;
 
     cli.Run();
 
