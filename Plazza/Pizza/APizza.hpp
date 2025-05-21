@@ -33,10 +33,10 @@ protected:
     ///////////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////////
-    Type m_type;                                    //<!
-    Size m_size;                                    //<!
-    float m_baseCookingTime;                        //<!
-    const std::vector<Ingredient>& m_ingredients;   //<!
+    Type m_type;                            //<!
+    Size m_size;                            //<!
+    float m_baseCookingTime;                //<!
+    std::vector<Ingredient> m_ingredients;  //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ public:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    virtual IPizza::PackOutCome Pack(void) const override;
+    virtual uint16_t Pack(void) const override;
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
@@ -102,7 +102,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     const std::vector<Ingredient>& GetIngredients(void) const;
 
-protected:
+public:
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
