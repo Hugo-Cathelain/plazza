@@ -33,6 +33,17 @@ std::string Parser::Trim(const std::string& str)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+IPizza::Size Parser::StringToPizzaSize(const std::string& str)
+{
+    if (str == "S") return (IPizza::Size::S);
+    if (str == "M") return (IPizza::Size::M);
+    if (str == "L") return (IPizza::Size::L);
+    if (str == "XL") return (IPizza::Size::XL);
+    if (str == "XXL") return (IPizza::Size::XXL);
+    throw std::runtime_error("Invalid p izza size string: " + str);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 Parser::Orders Parser::ParseOrders(const std::string& line)
 {
     Orders orders;
@@ -82,17 +93,19 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
                     throw std::runtime_error("Invalid quantity format: " + numStr.substr(1));
                 }
 
-                PizzaFactory factory;
+                PizzaFactory& factory = PizzaFactory::GetInstance();
 
                 if (!factory.HasFactory(typeStr))
                 {
                     throw std::runtime_error("Invalid pizza type: unknown type '" + typeStr + "'");
                 }
 
+                IPizza::Size pizzaSize = StringToPizzaSize(sizeStr);
+
                 orders.push_back(std::make_tuple(
-                    factory.CreatePizza(typeStr, IPizza::Size::XL),
-                    static_cast<unsigned int>(quantity))
-                );
+                    factory.CreatePizza(typeStr, pizzaSize),
+                    static_cast<unsigned int>(quantity)
+                ));
             }
             else
             {

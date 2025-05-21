@@ -75,7 +75,7 @@ private:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    static IPizza StringToPizza(const std::string& str);
+    static IPizza::Size StringToPizzaSize(const std::string& str);
 };
 
 } // !namespace Plazza
