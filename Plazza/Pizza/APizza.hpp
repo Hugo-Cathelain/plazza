@@ -35,7 +35,7 @@ protected:
     ///////////////////////////////////////////////////////////////////////////
     Type m_type;                            //<!
     Size m_size;                            //<!
-    float m_baseCookingTime;                //<!
+    std::chrono::seconds m_baseCookingTime; //<!
     std::vector<Ingredient> m_ingredients;  //<!
 
 public:
@@ -51,7 +51,7 @@ public:
     APizza(
         IPizza::Type type,
         IPizza::Size size,
-        float baseCookingTime,
+        std::chrono::seconds baseCookingTime,
         const std::vector<Ingredient>& ingredients
     );
 
@@ -92,7 +92,7 @@ public:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    virtual float GetCookingTime(void) const override;
+    virtual std::chrono::milliseconds GetCookingTime(void) const override;
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

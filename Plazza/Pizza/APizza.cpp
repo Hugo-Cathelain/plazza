@@ -22,7 +22,7 @@ float APizza::s_cookingTimeMultiplier = 1.0f;
 APizza::APizza(
     IPizza::Type type,
     IPizza::Size size,
-    float baseCookingTime,
+    std::chrono::seconds baseCookingTime,
     const std::vector<Ingredient>& ingredients
 )
     : m_type(type)
@@ -44,9 +44,11 @@ IPizza::Size APizza::GetSize(void) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-float APizza::GetCookingTime(void) const
+std::chrono::milliseconds APizza::GetCookingTime(void) const
 {
-    return (m_baseCookingTime * s_cookingTimeMultiplier);
+    return (std::chrono::duration_cast<std::chrono::milliseconds>(
+        m_baseCookingTime * s_cookingTimeMultiplier
+    ));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

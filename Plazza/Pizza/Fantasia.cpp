@@ -11,7 +11,7 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 Fantasia::Fantasia(IPizza::Size size)
-    : APizza(Type::Fantasia, size, 4.0f, {
+    : APizza(Type::Fantasia, size, std::chrono::seconds(4), {
         Ingredient::DOUGH,
         Ingredient::TOMATO,
         Ingredient::EGGPLANT,

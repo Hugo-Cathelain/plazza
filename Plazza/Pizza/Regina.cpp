@@ -11,7 +11,7 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 Regina::Regina(IPizza::Size size)
-    : APizza(Type::Regina, size, 2.0f, {
+    : APizza(Type::Regina, size, std::chrono::seconds(2), {
         Ingredient::DOUGH,
         Ingredient::TOMATO,
         Ingredient::GRUYERE,
