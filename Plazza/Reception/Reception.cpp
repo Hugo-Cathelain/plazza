@@ -19,43 +19,36 @@ Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
-Reception::~Reception() {}
+Reception::~Reception()
+{}
 
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::DisplayStatus(void)
 {
-    std::cout << "status check: \n";
-    int i = 1;
+    std::cout << "Pizzeria Status:" << std::endl;
 
-    for (const auto &it : m_kitchens)
+    for (const auto& kitchen : m_kitchens)
     {
-        std::cout << "kitchen " << i << ": \n";
-        // thing for the cooks.
-        // thing for ingredients
-        // const auto& stockList = it->m_;
+        // TODO: thing to do here
+        (void)kitchen;
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Reception::NewKitchen(void)
+void Reception::CreateKitchen(void)
 {
-    m_kitchens.push_back(std::make_unique<Kitchen>(m_cookCount, 1.0, m_restockTime));
+    m_kitchens.push_back(std::make_unique<Kitchen>(
+        m_cookCount, 1.0, m_restockTime
+    ));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Reception::PizzaGate(void)
+void Reception::RemoveKitchen(size_t id)
 {
-
-}
-
-///////////////////////////////////////////////////////////////////////////////
-void Reception::RemoveKitchen(size_t ID)
-{
-    m_kitchens.erase(
-        std::remove_if(m_kitchens.begin(), m_kitchens.end(),
-            [ID](const std::unique_ptr<Kitchen>& kitchen) {
-                return kitchen->getId() == ID;
-            }),
+    m_kitchens.erase(std::remove_if(m_kitchens.begin(), m_kitchens.end(),
+        [id](const std::unique_ptr<Kitchen>& kitchen) {
+            return kitchen->getId() == id;
+        }),
         m_kitchens.end()
     );
 }
