@@ -125,7 +125,10 @@ int main(int argc, char* argv[])
 
     Plazza::APizza::SetCookingTimeMultiplier(cookingTimeMultiplier);
 
-    Plazza::Reception reception(std::chrono::milliseconds(ingredientRestockTimeMs), cooksPerKitchen);
+    Plazza::Reception reception(
+        std::chrono::milliseconds(ingredientRestockTimeMs),
+        cooksPerKitchen
+    );
     Plazza::CLI cli(reception);
 
     Plazza::Kitchen k1, k2, k3;
