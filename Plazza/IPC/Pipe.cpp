@@ -166,7 +166,8 @@ std::optional<Message> Pipe::PollMessage(void)
     if (bytes_read > 0)
     {
         m_buffer.insert(m_buffer.end(), read_buf, read_buf + bytes_read);
-    } else if (bytes_read == -1)
+    }
+    else if (bytes_read == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
