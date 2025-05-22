@@ -15,6 +15,7 @@ namespace Plazza
 Thread::Thread(std::function<void()> function)
     : m_function(std::move(function))
     , m_started(false)
+    , m_running(false)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,6 +45,7 @@ void Thread::Start(void)
     }
     try
     {
+        m_running = true;
         m_thread = std::thread(m_function);
         m_started = true;
     }
