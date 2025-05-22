@@ -33,8 +33,8 @@ public:
 public:
 
     void NewKitchen(void);
-    void RemoveKitchen(Kitchen* kitchen);
-
+    void RemoveKitchen(size_t ID);
+    void PizzaGate(void);
     void DisplayStatus(void);
 };
 

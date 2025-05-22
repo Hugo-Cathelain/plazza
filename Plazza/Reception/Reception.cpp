@@ -3,6 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "Reception/Reception.hpp"
 #include "iostream"
+#include "IPC/Message.hpp"
+#include "IPC/Pipe.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -30,6 +32,7 @@ void Reception::DisplayStatus(void)
         std::cout << "kitchen " << i << ": \n";
         // thing for the cooks.
         // thing for ingredients
+        // const auto& stockList = it->m_;
     }
 }
 
@@ -39,15 +42,22 @@ void Reception::NewKitchen(void)
     m_kitchens.push_back(std::make_unique<Kitchen>(m_cookCount, 1.0, m_restockTime));
 }
 
-void Reception::RemoveKitchen(Kitchen* kitchen)
+///////////////////////////////////////////////////////////////////////////////
+void Reception::PizzaGate(void)
 {
-    auto it = std::remove_if(m_kitchens.begin(), m_kitchens.end(),
-        [kitchen](const std::unique_ptr<Kitchen>& ptr) {
-            return ptr.get() == kitchen;  // Compare raw pointers
-        });
 
-    if (it != m_kitchens.end())
-        m_kitchens.erase(it, m_kitchens.end());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void Reception::RemoveKitchen(size_t ID)
+{
+    m_kitchens.erase(
+        std::remove_if(m_kitchens.begin(), m_kitchens.end(),
+            [ID](const std::unique_ptr<Kitchen>& kitchen) {
+                return kitchen->getId() == ID;
+            }),
+        m_kitchens.end()
+    );
 }
 
 } // !namespace Plazza
