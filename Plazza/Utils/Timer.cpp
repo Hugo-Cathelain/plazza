@@ -16,15 +16,18 @@ SteadyClock::SteadyClock() {}
 SteadyClock::~SteadyClock() {}
 
 ///////////////////////////////////////////////////////////////////////////////
-static SteadyClock::TimePoint Now(void)
+SteadyClock::TimePoint Now(void)
 {
-    return std::chrono::steady_clock::now();
+    return (std::chrono::steady_clock::now());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-static SteadyClock::Duration Elapsed(SteadyClock::TimePoint start, SteadyClock::TimePoint current)
+SteadyClock::Duration Elapsed(
+    SteadyClock::TimePoint start,
+    SteadyClock::TimePoint current
+)
 {
-    return (current - start);
+    return ((current - start));
 }
 
 } // Plazza
