@@ -32,7 +32,16 @@ Stock::~Stock()
 ///////////////////////////////////////////////////////////////////////////////
 void Stock::Routine(void)
 {
-    std::cout << "Stock Thread started" << std::endl;
+    while (m_running)
+    {
+        std::this_thread::sleep_for(m_restockTime);
+
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto& pair : m_stock)
+        {
+            pair.second++;
+        }
+    }
 }
 
 } // !namespace Plazza

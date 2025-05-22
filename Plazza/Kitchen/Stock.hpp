@@ -10,6 +10,7 @@
 #include "Concurrency/Thread.hpp"
 #include <chrono>
 #include <map>
+#include <mutex>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -35,6 +36,7 @@ private:
     std::chrono::milliseconds m_restockTime;    //<!
     std::map<Ingredient, int> m_stock;          //<!
     Kitchen& m_kitchen;                         //<!
+    std::mutex m_mutex;                         //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
