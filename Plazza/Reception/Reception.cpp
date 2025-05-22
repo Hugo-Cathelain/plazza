@@ -53,4 +53,26 @@ void Reception::RemoveKitchen(size_t id)
     );
 }
 
+///////////////////////////////////////////////////////////////////////////////
+void Reception::ProcessOrders(const Parser::Orders& orders)
+{
+    (void)orders;
+    // TODO: Add logic to sparse the command to all the kitchen
+    //
+    // Use the kitchen status to see the current capacity of each kitchen
+    // in term of available cooks, or ingredients. Do not dispatch a pizza
+    // if no ingredient are ready for it
+    // Avoid creating a kitchen when every kitchen is saturated, the default
+    // Calculation for the saturation is 2 * N cooks, but for the real saturation
+    // we will use something like 1.6 * N cooks to open a new kitchen.
+    // Do not create a lot of kitchen, always keep in mind a ratio: pizza/cook/kitchen
+    // Prioriterize the kitchen with the available ingredients in the stock
+    // Stock > Cook > new Kitchen
+    // For the cooks, use a rotation algorithm to avoid deadlocks, each cook can
+    // grab ingredient and can ask the other for pending ingredient.
+    // There will always be pending cooks without any ingredient but that do not matter
+    // In a kitchen with 5 cooks, only 3 really works and the other two are waiting
+    // for the ingredients/
+}
+
 } // !namespace Plazza
