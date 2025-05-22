@@ -69,11 +69,22 @@ std::optional<Message> Message::Unpack(const std::vector<char>& buffer)
 
     if (type_idx == 0)
     {
-        result = Message(Message::Closed{});
+        Message::Closed data;
+        if (ReadFromBuffer(current, payload_actual_end, data.id))
+        {
+            result = Message(data);
+        }
     }
     else if (type_idx == 1)
     {
-        result = Message(Message::Order{});
+        Message::Order data;
+        if (
+            ReadFromBuffer(current, payload_actual_end, data.id) &&
+            ReadFromBuffer(current, payload_actual_end, data.pizza)
+        )
+        {
+            result = Message(data);
+        }
     }
     else if (type_idx == 2)
     {
@@ -116,8 +127,11 @@ std::vector<char> Message::Pack(void) const
         using T = std::decay_t<decltype(data)>;
         if constexpr (std::is_same_v<T, Message::Closed>)
         {
+            AppendToBuffer(payload_buffer, data.id);
         } else if constexpr (std::is_same_v<T, Message::Order>)
         {
+            AppendToBuffer(payload_buffer, data.id);
+            AppendToBuffer(payload_buffer, data.pizza);
         }
         else if constexpr (std::is_same_v<T, Message::Status>)
         {

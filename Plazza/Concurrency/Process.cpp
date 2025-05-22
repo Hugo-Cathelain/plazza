@@ -26,15 +26,49 @@ Process::Process(std::function<void()> function)
 ///////////////////////////////////////////////////////////////////////////////
 Process::~Process()
 {
-    if (m_pid != -1 && m_status != IProcess::Status::RUNNING)
+    if (m_pid > 0)
     {
-        try
+        if (this->IsRunning())
         {
-            Wait();
-        }
-        catch (...)
-        {
-            // Do something
+            if (kill(m_pid, SIGTERM) == 0)
+            {
+                int status;
+                pid_t wait_ret = waitpid(m_pid, &status, 0);
+
+                if (wait_ret == m_pid)
+                {
+                    UpdateStatusFromWait(status);
+                }
+                else
+                {
+                    kill(m_pid, SIGKILL);
+                    wait_ret = waitpid(m_pid, &status, 0);
+                    if (wait_ret == m_pid)
+                    {
+                        UpdateStatusFromWait(status);
+                    }
+                    else
+                    {
+                        m_status = IProcess::Status::ERROR;
+                    }
+                }
+            } else {
+                if (errno == ESRCH)
+                {
+                    int status;
+                    if (waitpid(m_pid, &status, WNOHANG) == m_pid)
+                    {
+                        UpdateStatusFromWait(status);
+                    } else
+                    {
+                        m_status = IProcess::Status::FINISHED;
+                    }
+                }
+                else
+                {
+                    m_status = IProcess::Status::ERROR;
+                }
+            }
         }
     }
 }
