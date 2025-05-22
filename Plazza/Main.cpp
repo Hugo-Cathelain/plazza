@@ -8,65 +8,8 @@
 #include <iostream>
 #include "Utils/Timer.hpp"
 
-#include "Concurrency/Process.hpp"
-#include "IPC/Message.hpp"
-#include "IPC/Pipe.hpp"
-#include <unistd.h>
-
-using namespace Plazza;
-
-void routine(void)
-{
-    pid_t pid = getpid();
-    std::cout << "Hello From Kitchen " << pid << std::endl;
-    Pipe read(RECEPTION_TO_KITCHEN_PIPE, Pipe::OpenMode::READ_ONLY);
-
-    read.Open();
-
-    while (true)
-    {
-        while (const auto& message = read.PollMessage())
-        {
-            std::cout << "Received Message" << std::endl;
-            if (auto status = message->GetIf<Message::Status>())
-            {
-                std::cout << "Id: " << status->id << std::endl;
-                std::cout << "Stock: " << status->stock << std::endl;
-            }
-            if (message->Is<Message::Closed>())
-            {
-                std::cout << "Goodbye " << pid << std::endl;
-                return;
-            }
-        }
-    }
-
-}
-
-int main(void)
-{
-    Process k1(routine), k2(routine);
-
-    k1.Start();
-    k2.Start();
-
-    Pipe write(RECEPTION_TO_KITCHEN_PIPE, Pipe::OpenMode::WRITE_ONLY);
-
-    write.Open();
-
-    write.SendMessage(Message(Message::Status{5, "Hello World"}));
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-    write.SendMessage(Message(Message::Closed{1}));
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-    write.Close();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
-int main2(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     if (argc != 4)
     {
