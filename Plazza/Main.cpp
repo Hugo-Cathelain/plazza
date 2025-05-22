@@ -12,9 +12,6 @@
 // #include "IPC/Message.hpp"
 // #include "IPC/Pipe.hpp"
 
-// static std::string KITCHEN_TO_RECEPTION_PIPE = "/tmp/plazza_kitchen_to_reception_pipe";
-// static std::string RECEPTION_TO_KITCHEN_PIPE = "/tmp/plazza_reception_to_kitchen_pipe";
-
 // using namespace Plazza;
 
 // void routine(void)
