@@ -18,8 +18,8 @@ namespace Plazza
 template <typename T>
 void PizzaFactory::RegisterPizza(const std::string& type)
 {
-    m_factories[type] = [](IPizza::Size size) -> std::shared_ptr<IPizza> {
-        return (std::make_shared<T>(size));
+    m_factories[type] = [](IPizza::Size size) -> std::unique_ptr<IPizza> {
+        return (std::make_unique<T>(size));
     };
 }
 

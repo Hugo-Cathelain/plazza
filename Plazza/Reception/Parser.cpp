@@ -114,10 +114,12 @@ Parser::Orders Parser::ParseOrders(const std::string& line)
 
                 IPizza::Size pizzaSize = StringToPizzaSize(sizeStr);
 
-                orders.push_back(std::make_tuple(
-                    factory.CreatePizza(typeStr, pizzaSize),
-                    static_cast<unsigned int>(quantity)
-                ));
+                for (int i = 0; i < quantity; i++)
+                {
+                    orders.push_back(std::move(
+                        factory.CreatePizza(typeStr, pizzaSize)
+                    ));
+                }
             }
             else
             {

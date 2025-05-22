@@ -23,7 +23,7 @@ PizzaFactory::PizzaFactory(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<IPizza> PizzaFactory::CreatePizza(
+std::unique_ptr<IPizza> PizzaFactory::CreatePizza(
     const std::string& type,
     IPizza::Size size
 )

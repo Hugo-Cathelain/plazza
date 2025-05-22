@@ -30,7 +30,7 @@ private:
     //
     ///////////////////////////////////////////////////////////////////////////
     std::unordered_map<
-        std::string, std::function<std::shared_ptr<IPizza>(IPizza::Size)>
+        std::string, std::function<std::unique_ptr<IPizza>(IPizza::Size)>
     > m_factories;          //<!
 
 public:
@@ -56,7 +56,7 @@ public:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::shared_ptr<IPizza> CreatePizza(
+    std::unique_ptr<IPizza> CreatePizza(
         const std::string& type,
         IPizza::Size size
     );

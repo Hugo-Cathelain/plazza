@@ -78,7 +78,14 @@ void CLI::ProcessCommand(const std::string& line)
             if (!orders.empty())
             {
                 std::cout << "Order received. Processing..." << std::endl;
-                // TODO: Add reception HandleOrder
+                for (const auto& pizza : orders)
+                {
+                    std::cout << "\t" << static_cast<int>(pizza->GetType())
+                              << ": " << static_cast<int>(pizza->GetSize())
+                              << " (" << pizza->GetCookingTime().count()
+                              << "ms) -> " << pizza->Pack()
+                              << std::endl;
+                }
             }
         }
         catch (const ParsingException& e)
