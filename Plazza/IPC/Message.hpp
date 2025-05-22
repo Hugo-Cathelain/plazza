@@ -10,6 +10,9 @@
 #include <vector>
 #include <cstdint>
 #include <cstring>
+#include <variant>
+#include <optional>
+#include <type_traits>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -28,68 +31,256 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-    enum class Type : uint8_t
+    struct Closed
+    {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    struct Order
+    {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    struct Status
     {
-        UNDEFINED = 0,
-        // --- Reception to Kitchen ---
-        ORDER_PIZZA,
-        KITCHEN_STATUS_REQUEST,
-        // --- Kitchen to Reception ---
-        PIZZA_READY,
-        PIZZA_COOKING_UPDATE,
-        KITCHEN_STATUS_RESPONSE,
-        KITCHEN_CLOSING_NOTIFICATION,
-        // --- Generic ---
-        ACK,
-        NACK,
-        ERROR_INFO
+        size_t id;
+        std::string stock;
     };
 
-public:
     ///////////////////////////////////////////////////////////////////////////
-    //
+    /// \brief
+    ///
     ///////////////////////////////////////////////////////////////////////////
-    static const size_t MESSAGE_TYPE_SIZE;
-    static const size_t PAYLOAD_SIZE_INDICATOR_SIZE;
-    static const size_t MESSAGE_HEADER_ONLY_SIZE;
+    struct RequestStatus
+    {};
 
-public:
+private:
     ///////////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////////
-    Type type;                      //<!
-    std::vector<char> payload;      //<!
+    std::variant<
+        Closed,
+        Order,
+        Status,
+        RequestStatus
+    > m_data;
+
+private:
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Check if a type is one of the variant types
+    ///
+    /// \tparam T
+    /// \tparam Ts
+    ///
+    /// \return True if the type is one of the variant types
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename T, typename... Ts>
+    static constexpr bool IsOneOf(const std::variant<Ts...>*)
+    {
+        return (std::disjunction_v<std::is_same<T, Ts>...>);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Check if a type is a subtype
+    ///
+    /// \tparam T
+    ///
+    /// \return True if the type is a subtype
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    static constexpr bool IsSubType = IsOneOf<T>(
+        decltype(&m_data)(nullptr)
+    );
 
 public:
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
-    /// \param type
-    /// \param data
+    /// \tparam T
     ///
     ///////////////////////////////////////////////////////////////////////////
-    Message(Type type = Type::UNDEFINED, std::vector<char> data = {});
+    template <typename T>
+    Message(const T& data)
+    {
+        static_assert(IsSubType<T>, "Invalid type");
+        if constexpr (IsSubType<T>)
+        {
+            m_data = data;
+        }
+    }
 
-public:
+private:
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \tparam T
+    ///
+    /// \param buffer
+    /// \param value
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    static void AppendToBuffer(
+        std::vector<char>& buffer,
+        const T& value
+    )
+    {
+        static_assert(
+            std::is_trivial_v<T> && std::is_standard_layout_v<T>,
+            "Type must be POD-like for direct memory copy."
+        );
+        const char* bytes = reinterpret_cast<const char*>(&value);
+        buffer.insert(buffer.end(), bytes, bytes + sizeof(T));
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
     /// \param buffer
-    /// \param size
-    /// \param out
-    /// \param bytes
+    /// \param str
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    static void AppendToBuffer(
+        std::vector<char>& buffer,
+        const std::string& str
+    );
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \tparam T
+    ///
+    /// \param current
+    /// \param end
+    /// \param value
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template<typename T>
+    static bool ReadFromBuffer(const char*& current, const char* end, T& value)
+    {
+        static_assert(
+            std::is_trivial_v<T> && std::is_standard_layout_v<T>,
+            "Type must be POD-like for direct memory copy."
+        );
+        if (current + sizeof(T) > end)
+        {
+            return (false);
+        }
+        std::memcpy(&value, current, sizeof(T));
+        current += sizeof(T);
+        return (true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param current
+    /// \param end
+    /// \param str
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    static bool ReadFromBuffer(
+        const char*& current,
+        const char* end,
+        std::string& str
+    );
+
+public:
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \tparam T
     ///
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    static bool Unpack(
-        const char* buffer,
-        size_t size,
-        Message& out,
-        size_t& bytes
-    );
+    template <typename T>
+    bool Is(void) const
+    {
+        static_assert(IsSubType<T>, "Invalid type");
+        if constexpr (IsSubType<T>)
+        {
+            return (std::holds_alternative<T>(m_data));
+        }
+        return (false);
+    }
 
-public:
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Get the event as a specific type
+    ///
+    /// \tparam T
+    ///
+    /// \return The event as the specified type
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    T* GetIf(void)
+    {
+        static_assert(IsSubType<T>, "Invalid type");
+        if constexpr (IsSubType<T>)
+        {
+            return (std::get_if<T>(&m_data));
+        }
+        return (nullptr);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Get the event as a specific type
+    ///
+    /// \tparam T
+    ///
+    /// \return The event as the specified type
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    const T* GetIf(void) const
+    {
+        static_assert(IsSubType<T>, "Invalid type");
+        if constexpr (IsSubType<T>)
+        {
+            return (std::get_if<T>(&m_data));
+        }
+        return (nullptr);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Construct the event as a specific type
+    ///
+    /// \tparam Visitor
+    ///
+    /// \param visitor The visitor to construct the event
+    ///
+    /// \return The constructed event
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Visitor>
+    decltype(auto) Visit(Visitor&& visitor)
+    {
+        return (std::visit(std::forward<Visitor>(visitor), m_data));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief Construct the event as a specific type
+    ///
+    /// \tparam Visitor
+    ///
+    /// \param visitor The visitor to construct the event
+    ///
+    /// \return The constructed event
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Visitor>
+    decltype(auto) Visit(Visitor&& visitor) const
+    {
+        return (std::visit(std::forward<Visitor>(visitor), m_data));
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
@@ -98,21 +289,14 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     std::vector<char> Pack(void) const;
 
+public:
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
     ///
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::string GetPayloadAsString(void) const;
-
-    ///////////////////////////////////////////////////////////////////////////
-    /// \brief
-    ///
-    /// \param str
-    ///
-    ///////////////////////////////////////////////////////////////////////////
-    void SetPayloadFromString(const std::string& str);
+    static std::optional<Message> Unpack(const std::vector<char>& buffer);
 };
 
 } // !namespace Plazza

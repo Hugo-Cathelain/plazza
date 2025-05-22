@@ -21,8 +21,6 @@ Pipe::Pipe(const std::string& name, Pipe::OpenMode mode)
     : m_name(name)
     , m_mode(mode)
     , m_fd(-1)
-    , m_errorState(false)
-    , m_isCreator(false)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -30,12 +28,9 @@ Pipe::Pipe(Pipe&& other) noexcept
     : m_name(std::move(other.m_name))
     , m_mode(other.m_mode)
     , m_fd(other.m_fd)
-    , m_errorState(other.m_errorState)
-    , m_isCreator(other.m_isCreator)
+    , m_buffer(std::move(other.m_buffer))
 {
     other.m_fd = -1;
-    other.m_isCreator = false;
-    other.m_errorState = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,88 +44,55 @@ Pipe& Pipe::operator=(Pipe&& other) noexcept
 {
     if (this != &other)
     {
-        if (IsOpen())
-        {
-            Close();
-        }
+        Close();
 
         m_name = std::move(other.m_name);
         m_mode = other.m_mode;
         m_fd = other.m_fd;
-        m_errorState = other.m_errorState;
-        m_isCreator = other.m_isCreator;
+        m_buffer = std::move(other.m_buffer);
 
         other.m_fd = -1;
-        other.m_isCreator = false;
-        other.m_errorState = true;
     }
     return (*this);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Pipe::TryCreateFifo(void)
-{
-    struct stat st;
-
-    if (stat(m_name.c_str(), &st) == -1)
-    {
-        if (errno == ENOENT)
-        {
-            if (mkfifo(m_name.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) == -1)
-            {
-                if (errno != EEXIST)
-                {
-                    throw std::runtime_error("Failed to create FIFO '" + m_name + "': " + strerror(errno));
-                }
-            }
-            else
-            {
-                m_isCreator = true;
-            }
-        }
-        else
-        {
-            throw std::runtime_error("Failed to stat FIFO '" + m_name + "': " + strerror(errno)); 
-        }
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////
 void Pipe::Open(void)
 {
-    if (IsOpen())
+    if (m_fd != -1)
     {
         return;
     }
-    m_errorState = false;
-    m_isCreator = false;
 
-    TryCreateFifo();
+    if (mkfifo(m_name.c_str(), 0666) == -1)
+    {
+        if (errno != EEXIST)
+        {
+            throw std::system_error(
+                errno,
+                std::system_category(),
+                "Failed to create FIFO: " + m_name
+            );
+        }
+    }
 
     int flags = 0;
     if (m_mode == OpenMode::READ_ONLY)
     {
-        flags = O_RDONLY;
-    }
-    else if (m_mode == OpenMode::WRITE_ONLY)
-    {
-        flags = O_WRONLY;
+        flags = O_RDONLY | O_NONBLOCK;
     }
     else
     {
-        m_errorState = true;
-        throw std::runtime_error("Unsupported pipe mode for opening.");
+        flags = O_WRONLY;
     }
 
-    m_fd = ::open(m_name.c_str(), flags);
-
+    m_fd = open(m_name.c_str(), flags);
     if (m_fd == -1)
     {
-        m_errorState = true;
-        throw std::runtime_error(
-            "Failed to open FIFO '" + m_name + "' for " +
-            (m_mode == OpenMode::READ_ONLY ? "reading" : "writing") +
-            ": " + strerror(errno)
+        throw std::system_error(
+            errno,
+            std::system_category(),
+            "Failed to open FIFO: " + m_name
         );
     }
 }
@@ -138,194 +100,133 @@ void Pipe::Open(void)
 ///////////////////////////////////////////////////////////////////////////////
 void Pipe::Close(void)
 {
-    if (IsOpen())
+    if (m_fd != -1)
     {
-        if (::close(m_fd) == -1)
-        {
-            std::cerr << "Warning: error closing pipe '"
-                      << m_name << "' fd " << m_fd << ": "
-                      << strerror(errno) << std::endl;
-        }
+        close(m_fd);
         m_fd = -1;
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-bool Pipe::IsOpen(void) const
+void Pipe::SendMessage(const Message& message)
 {
-    return (m_fd != -1);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-bool Pipe::IsGood(void) const
-{
-    return (IsOpen() && !m_errorState);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-void Pipe::RemoveResource(void)
-{
-    if (!m_name.empty())
+    if (m_mode != OpenMode::WRITE_ONLY)
     {
-        if (::unlink(m_name.c_str()) == -1)
-        {
-            if (errno != ENOENT)
-            {
-                std::cerr << "Warning: error unlinking pipe '"
-                          << m_name << "': " << strerror(errno) << std::endl;
-            }
-        }
-        m_isCreator = false;
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-bool Pipe::ReadBytes(char* buffer, size_t bytes)
-{
-    if (!IsGood() || m_mode != OpenMode::READ_ONLY)
-    {
-        m_errorState = true;
-        return (false);
-    }
-
-    size_t totalBytesRead = 0;
-    while (totalBytesRead < bytes)
-    {
-        ssize_t bytesReadNow = ::read(
-            m_fd, buffer + totalBytesRead, bytes - totalBytesRead
+        throw std::runtime_error(
+            "Pipe not opened in WRITE_ONLY mode for SendMessage."
         );
+    }
+    if (m_fd == -1)
+    {
+        throw std::runtime_error("Pipe is not open for SendMessage.");
+    }
 
-        if (bytesReadNow < 0)
+    std::vector<char> packed_message = message.Pack();
+    if (packed_message.empty())
+    {
+        return;
+    }
+
+    ssize_t total_written = 0;
+    size_t total_to_write = packed_message.size();
+    const char* data_ptr = packed_message.data();
+
+    while (total_written < static_cast<ssize_t>(total_to_write))
+    {
+        ssize_t bytes_written = write(
+            m_fd, data_ptr + total_written, total_to_write - total_written
+        );
+        if (bytes_written == -1)
         {
             if (errno == EINTR)
             {
                 continue;
             }
-            m_errorState = true;
-            return (false);
+            throw std::system_error(
+                errno,
+                std::system_category(),
+                "Failed to write to pipe"
+            );
         }
-        if (bytesReadNow == 0)
-        {
-            m_errorState = true;
-            return (false);
-        }
-        totalBytesRead += bytesReadNow;
+        total_written += bytes_written;
     }
-    return (true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-bool Pipe::WriteBytes(const char* buffer, size_t bytes)
+std::optional<Message> Pipe::PollMessage(void)
 {
-    if (!IsGood() || m_mode != OpenMode::WRITE_ONLY)
+    if (m_mode != OpenMode::READ_ONLY || m_fd == -1)
     {
-        m_errorState = true;
-        return (false);
+        return (std::nullopt);
     }
 
-    size_t totalBytesWritten = 0;
-    while (totalBytesWritten < bytes)
-    {
-        ssize_t bytesWrittenNow = ::write(
-            m_fd, buffer + totalBytesWritten, bytes - totalBytesWritten
-        );
+    char read_buf[4096];
+    ssize_t bytes_read = read(m_fd, read_buf, sizeof(read_buf));
 
-        if (bytesWrittenNow < 0) {
-            if (errno == EINTR)
-            {
-                continue;
-            }
-            if (errno == EPIPE)
-            {
-                m_errorState = true;
-                return (false);
-            }
-            m_errorState = true;
-            return (false);
-        }
-        totalBytesWritten += bytesWrittenNow;
-    }
-    return (true);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-IIPCChannel& Pipe::operator<<(const Message& msg)
-{
-    if (!IsGood() || m_mode != OpenMode::WRITE_ONLY)
+    if (bytes_read > 0)
     {
-        m_errorState = true;
-        throw std::runtime_error(
-            "Pipe not open for writing or in error state: " + m_name
-        );
-    }
-
-    std::vector<char> packedMessage = msg.Pack();
-    if (
-        packedMessage.empty() &&
-        msg.payload.empty() &&
-        msg.type == Message::Type::UNDEFINED
-    )
+        m_buffer.insert(m_buffer.end(), read_buf, read_buf + bytes_read);
+    } else if (bytes_read == -1)
     {
-        return (*this);
-    }
-
-    if (!WriteBytes(packedMessage.data(), packedMessage.size()))
-    {
-        throw std::runtime_error(
-            "Failed to write entire message to pipe '" + m_name +
-            "'. Last error: " + strerror(errno)
-        );
-    }
-    return (*this);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-IIPCChannel& Pipe::operator>>(Message& msg)
-{
-    if (!IsGood() || m_mode != OpenMode::READ_ONLY)
-    {
-        m_errorState = true;
-        throw std::runtime_error(
-            "Pipe not open for reading or in error state: " + m_name
-        );
-    }
-
-    char headerBuffer[Message::MESSAGE_HEADER_ONLY_SIZE];
-    if (!ReadBytes(headerBuffer, Message::MESSAGE_HEADER_ONLY_SIZE))
-    {
-        if (!IsOpen() && !m_errorState)
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            m_errorState = true;
+            // No data available right now, this is expected for O_NONBLOCK.
+            // Try to parse any existing data in buffer.
         }
-        throw std::runtime_error(
-            "Failed to read message header from pipe '" + m_name +
-            "'. EOF or read error. Last error: " + strerror(errno)
-        );
-    }
-
-    msg.type = static_cast<Message::Type>(headerBuffer[0]);
-    uint32_t payloadSize = 0;
-    std::memcpy(
-        &payloadSize,
-        headerBuffer + Message::MESSAGE_TYPE_SIZE,
-        Message::PAYLOAD_SIZE_INDICATOR_SIZE
-    );
-
-    msg.payload.clear();
-    if (payloadSize > 0)
-    {
-        msg.payload.resize(payloadSize);
-        if (!ReadBytes(msg.payload.data(), payloadSize))
+        else if (errno == EINTR)
         {
-            throw std::runtime_error(
-                "Failed to read message payload (size " +
-                std::to_string(payloadSize) +
-                ") from pipe '" + m_name + "'. Last error: " + strerror(errno)
+            // Interrupted, also try to parse existing buffer.
+        }
+         else
+         {
+            throw std::system_error(
+                errno, std::system_category(), "Pipe read error"
             );
         }
     }
+    else if (bytes_read == 0)
+    {
+        // EOF - other end closed.
+        // If m_buffer is empty, future calls will also yield EOF and return nullopt.
+        // If m_buffer has data, we try to parse it below.
+        // Consider this a signal that no more data will EVER come.
+        // If m_buffer is empty after this, it's truly the end.
+    }
 
-    return *this;
+    if (m_buffer.size() < sizeof(uint32_t))
+    {
+        return (std::nullopt);
+    }
+
+    uint32_t declared_payload_len;
+    std::memcpy(&declared_payload_len, m_buffer.data(), sizeof(uint32_t));
+
+    uint32_t required_total_len = sizeof(uint32_t) + declared_payload_len;
+
+    if (m_buffer.size() < required_total_len)
+    {
+        if (bytes_read == 0 && m_buffer.size() < required_total_len)
+        {
+            m_buffer.clear();
+        }
+        return (std::nullopt);
+    }
+
+    std::vector<char> current_message_bytes(
+        m_buffer.begin(), m_buffer.begin() + required_total_len
+    );
+    std::optional<Message> unpacked_msg = Message::Unpack(current_message_bytes);
+
+    m_buffer.erase(m_buffer.begin(), m_buffer.begin() + required_total_len);
+
+    if (!unpacked_msg)
+    {
+        // Unpack failed, meaning the data was malformed.
+        // Data has been consumed from buffer. Log or handle as error.
+        // std::cerr << "Warning: Message::Unpack failed. Discarded malformed message segment." << std::endl;
+    }
+    
+    return (unpacked_msg);
 }
 
 } // !namespace Plazza

@@ -2,7 +2,6 @@
 /// Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Kitchen/Kitchen.hpp"
-#include "IPC/IIPCChannel.hpp"
 #include "IPC/Message.hpp"
 #include "IPC/Pipe.hpp"
 #include <iostream>
