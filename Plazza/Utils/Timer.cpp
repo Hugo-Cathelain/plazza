@@ -16,13 +16,13 @@ SteadyClock::SteadyClock() {}
 SteadyClock::~SteadyClock() {}
 
 ///////////////////////////////////////////////////////////////////////////////
-SteadyClock::TimePoint Now(void)
+SteadyClock::TimePoint SteadyClock::Now(void)
 {
     return (std::chrono::steady_clock::now());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-SteadyClock::Duration Elapsed(
+SteadyClock::Duration SteadyClock::Elapsed(
     SteadyClock::TimePoint start,
     SteadyClock::TimePoint current
 )
