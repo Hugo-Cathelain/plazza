@@ -119,7 +119,7 @@ size_t Kitchen::GetID(void) const
 void Kitchen::SendStatus(void)
 {
     std::string pack = m_stock->Pack();
-    Message status = Message::Status{m_id, pack, m_elapsedMs};
+    Message status = Message::Status{m_id, pack, m_elapsedMs, static_cast<size_t>(idleCookCount)};
     m_toReception->SendMessage(status);
     // look up cv
 }
