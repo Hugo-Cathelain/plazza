@@ -55,4 +55,10 @@ bool Cook::CookPizza(const IPizza& pizza)
     return (true);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+bool Cook::GetStatus(void) const
+{
+    return (m_cooking.load());
+}
+
 } // !namespace Plazza
