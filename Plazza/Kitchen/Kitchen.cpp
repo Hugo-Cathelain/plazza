@@ -77,9 +77,7 @@ void Kitchen::Routine(void)
             // return status
             if (message->Is<Message::RequestStatus>())
             {
-                m_toReception->SendMessage(Message::Status{
-                    m_id, std::to_string(cycle)
-                });
+                SendStatus();
                 std::cout << "Kitchen " << m_id << " status sent" << std::endl;
             }
             else if (message->Is<Message::Order>())
@@ -88,8 +86,6 @@ void Kitchen::Routine(void)
                 std::cout << "Kitchen " << m_id << " Order sent" << std::endl;
             }
         }
-        std::cout << "shutting down" << std::endl;
-        ForClosure();
         ForClosureCheck();
         // send pizza
         // if (cycle == 5)
@@ -100,7 +96,7 @@ void Kitchen::Routine(void)
         //         factory.CreatePizza("regina", IPizza::Size::XL)->Pack()
         //     });
         // }
-        
+
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         cycle++;
     }
@@ -123,7 +119,6 @@ void Kitchen::SendStatus(void)
     std::string pack = m_stock->Pack();
     Message status = Message::Status{m_id, pack};
     m_toReception->SendMessage(status);
-    // send stocklist
     // passive amount of cooks
     // m_id
     // forclosure timepoint
