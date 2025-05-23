@@ -62,7 +62,7 @@ public:
     /// \brief
     ///
     ///////////////////////////////////////////////////////////////////////////
-     bool GetStatus(void) const;
+     bool IsCooking(void) const;
 };
 
 } // !namespace Plazza

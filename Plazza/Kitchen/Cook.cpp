@@ -56,9 +56,9 @@ bool Cook::CookPizza(const IPizza& pizza)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-bool Cook::GetStatus(void) const
+bool Cook::IsCooking(void) const
 {
-    return (m_cooking.load());
+    return (m_cooking);
 }
 
 } // !namespace Plazza
