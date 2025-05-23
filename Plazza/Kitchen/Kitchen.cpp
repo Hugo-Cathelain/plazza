@@ -109,6 +109,20 @@ size_t Kitchen::GetID(void) const
     return (m_id);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::SendStatus(void)
+{
+
+    Message status = Message::Status{m_id, };
+    m_toReception->SendMessage(status);
+    // send stocklist
+    // passive amount of cooks
+    // m_id
+    // forclosure timepoint
+    // look up cv
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosure(void)
 {
