@@ -3,3 +3,6 @@
 plazza
 *.ini
 .vscode/
+unit_tests
+*.gcda
+*.gcno
