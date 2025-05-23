@@ -63,6 +63,16 @@ public:
     struct RequestStatus
     {};
 
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    struct CookedPizza
+    {
+        size_t id;
+        uint16_t pizza;
+    };
+
 private:
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -71,7 +81,8 @@ private:
         Closed,
         Order,
         Status,
-        RequestStatus
+        RequestStatus,
+        CookedPizza
     > m_data;
 
 private:

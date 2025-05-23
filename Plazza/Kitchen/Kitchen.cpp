@@ -86,4 +86,10 @@ size_t Kitchen::GetID(void) const
     return (m_id);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
+{
+    m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
+}
+
 } // !namespace Plazza

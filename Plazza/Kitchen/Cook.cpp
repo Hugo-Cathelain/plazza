@@ -1,7 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// Dependencies
 ///////////////////////////////////////////////////////////////////////////////
-#include "Cook.hpp"
+#include "Kitchen/Cook.hpp"
+#include "Kitchen/Kitchen.hpp"
+#include "Kitchen/Stock.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Namespace Plazza
@@ -48,7 +50,7 @@ bool Cook::CookPizza(const IPizza& pizza)
     m_cooking = true;
     std::this_thread::sleep_for(pizza.GetCookingTime());
     m_cooking = false;
-    // m_kitchen.NotifyPizzaComplete(pizza);
+    m_kitchen.NotifyPizzaCompletion(pizza);
 
     return (true);
 }

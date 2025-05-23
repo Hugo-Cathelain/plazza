@@ -101,6 +101,17 @@ std::optional<Message> Message::Unpack(const std::vector<char>& buffer)
     {
         result = Message(Message::RequestStatus{});
     }
+    else if (type_idx == 4)
+    {
+        Message::CookedPizza data;
+        if (
+            ReadFromBuffer(current, payload_actual_end, data.id) &&
+            ReadFromBuffer(current, payload_actual_end, data.pizza)
+        )
+        {
+            result = Message(data);
+        }
+    }
     else
     {
         return (std::nullopt);
@@ -137,8 +148,14 @@ std::vector<char> Message::Pack(void) const
         {
             AppendToBuffer(payload_buffer, data.id);
             AppendToBuffer(payload_buffer, data.stock);
-        } else if constexpr (std::is_same_v<T, Message::RequestStatus>)
+        }
+        else if constexpr (std::is_same_v<T, Message::RequestStatus>)
         {
+        }
+        else if constexpr (std::is_same_v<T, Message::CookedPizza>)
+        {
+            AppendToBuffer(payload_buffer, data.id);
+            AppendToBuffer(payload_buffer, data.pizza);
         }
     }, m_data);
 
