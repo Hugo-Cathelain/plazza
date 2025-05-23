@@ -98,6 +98,17 @@ void Kitchen::Routine(void)
     std::cout << "Kitchen " << m_id << " is closing" << std::endl;
 }
 
+
+
+//TODO: getnextpizza()
+//TODO: getnextpizza
+
+///////////////////////////////////////////////////////////////////////////////
+size_t Kitchen::GetID(void) const
+{
+    return (m_id);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosure(void)
 {
