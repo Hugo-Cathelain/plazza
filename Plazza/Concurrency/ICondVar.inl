@@ -16,15 +16,28 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 template <class Rep, class Period>
-void ICondVar::WaitFor(
+bool ICondVar::WaitFor(
     IMutex& mutex,
     const std::chrono::duration<Rep, Period>& relTime
 )
 {
-    this->DoWaitFor(
+    return (this->DoWaitFor(
         mutex,
         std::chrono::duration_cast<std::chrono::milliseconds>(relTime)
-    );
+    ));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+template <class Rep, class Period>
+bool ICondVar::WaitFor(
+    std::unique_lock<std::mutex>& lock,
+    const std::chrono::duration<Rep, Period>& timeout
+)
+{
+    return (this->DoWaitFor(
+        lock,
+        std::chrono::duration_cast<std::chrono::milliseconds>(timeout)
+    ));
 }
 
 } // !namespace Plazza

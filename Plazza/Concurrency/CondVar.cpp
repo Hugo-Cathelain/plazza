@@ -22,13 +22,22 @@ void CondVar::Wait(IMutex& mutex)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void CondVar::DoWaitFor(
+bool CondVar::DoWaitFor(
     IMutex& mutex,
     const std::chrono::milliseconds& relTime
 )
 {
     std::unique_lock<std::mutex> lock(mutex);
-    m_cv.wait_for(lock, relTime);
+    return (m_cv.wait_for(lock, relTime) == std::cv_status::no_timeout);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+bool CondVar::DoWaitFor(
+    std::unique_lock<std::mutex>& lock,
+    const std::chrono::milliseconds& timeout
+)
+{
+    return (m_cv.wait_for(lock, timeout) == std::cv_status::no_timeout);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

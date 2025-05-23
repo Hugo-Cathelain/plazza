@@ -97,9 +97,21 @@ protected:
     /// \param relTime
     ///
     ///////////////////////////////////////////////////////////////////////////
-    virtual void DoWaitFor(
+    virtual bool DoWaitFor(
         IMutex& mutex,
         const std::chrono::milliseconds& relTime
+    ) override;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param lock
+    /// \param timeout
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    virtual bool DoWaitFor(
+        std::unique_lock<std::mutex>& lock,
+        const std::chrono::milliseconds& timeout
     ) override;
 };
 

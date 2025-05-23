@@ -47,9 +47,22 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     template <class Rep, class Period>
-    void WaitFor(
+    bool WaitFor(
         IMutex& mutex,
         const std::chrono::duration<Rep, Period>& relTime
+    );
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param lock
+    /// \param timeout
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    template<typename Rep, typename Period>
+    bool WaitFor(
+        std::unique_lock<std::mutex>& lock, 
+        const std::chrono::duration<Rep, Period>& timeout
     );
 
     ///////////////////////////////////////////////////////////////////////////
@@ -72,9 +85,21 @@ protected:
     /// \param relTime
     ///
     ///////////////////////////////////////////////////////////////////////////
-    virtual void DoWaitFor(
+    virtual bool DoWaitFor(
         IMutex& mutex,
         const std::chrono::milliseconds& relTime
+    ) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param lock
+    /// \param timeout
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    virtual bool DoWaitFor(
+        std::unique_lock<std::mutex>& lock,
+        const std::chrono::milliseconds& timeout
     ) = 0;
 };
 
