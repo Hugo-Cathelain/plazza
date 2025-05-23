@@ -46,15 +46,15 @@ private:
     size_t m_cookCount;                             //<!
     std::atomic<bool> m_running;                    //<!
     std::atomic<int> m_activePizzaCount;            //<!
-    std::atomic<int> m_cooksIdleCount;              //<!
+    std::atomic<int> idleCookCount;                 //<!
     std::unique_ptr<Stock> m_stock;                 //<!
     size_t m_id;                                    //<!
     std::unique_ptr<Pipe> m_toReception;            //<!
-    bool m_hasForclosureStarted;                    //<!
     std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
     SteadyClock::TimePoint m_forclosureTime;        //<!
     bool m_isRoutineRunning;                        //<!
     std::queue<IPizza> pizzaQueue;                  //<!
+    int64_t m_elapsedMs;                            //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////

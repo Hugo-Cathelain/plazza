@@ -27,8 +27,9 @@ Kitchen::Kitchen(
     , m_multiplier(multiplier)
     , m_cookCount(numberOfCooks)
     , m_id(s_nextId++)
-    , m_hasForclosureStarted(false)
+    , m_forclosureTime(SteadyClock::Now())
     , m_isRoutineRunning(true)
+    , m_elapsedMs(0)
 {
     Start();
     pipe = std::make_unique<Pipe>(
@@ -36,11 +37,6 @@ Kitchen::Kitchen(
         Pipe::OpenMode::WRITE_ONLY
     );
     pipe->Open();
-
-    for (size_t i = 0; i != m_cookCount; i++)
-    {
-        m_cooks.push_back(std::make_unique<Cook>(*this, *m_stock));
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,6 +60,11 @@ void Kitchen::Routine(void)
 
     pipe->Open();
     m_toReception->Open();
+
+    for (size_t i = 0; i < m_cookCount; i++)
+    {
+        m_cooks.push_back(std::make_unique<Cook>(*this, *m_stock));
+    }
 
     while (m_isRoutineRunning)
     {
@@ -118,11 +119,8 @@ size_t Kitchen::GetID(void) const
 void Kitchen::SendStatus(void)
 {
     std::string pack = m_stock->Pack();
-    Message status = Message::Status{m_id, pack};
+    Message status = Message::Status{m_id, pack, m_elapsedMs};
     m_toReception->SendMessage(status);
-    // passive amount of cooks
-    // m_id
-    // forclosure timepoint
     // look up cv
 }
 
@@ -135,33 +133,30 @@ void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosureCheck(void)
 {
-    bool idleCooks = false;
+    idleCookCount = 0;
+
     for (const auto& cooks : m_cooks)
     {
-        if (!cooks->GetStatus())
+        if (!cooks->IsCooking())
         {
-            idleCooks = true;
+            idleCookCount++;
         }
     }
 
-    if (idleCooks && !m_hasForclosureStarted)
+    if (static_cast<size_t>(idleCookCount.load()) != m_cookCount)
     {
         m_forclosureTime = SteadyClock::Now();
-        m_hasForclosureStarted = true;
+        m_elapsedMs = 0;
     }
-
-    if (!idleCooks)
+    if (static_cast<size_t>(idleCookCount.load()) == m_cookCount)
     {
-        m_hasForclosureStarted = false;
-        return;
-    }
-
-    int64_t elapsedMs = SteadyClock::DurationToMs(
+    m_elapsedMs = SteadyClock::DurationToMs(
         SteadyClock::Elapsed(m_forclosureTime, SteadyClock::Now()));
 
-    if (elapsedMs >= 5000)
-    {
-        ForClosure();
+        if (m_elapsedMs >= 5000)
+        {
+            ForClosure();
+        }
     }
 }
 
