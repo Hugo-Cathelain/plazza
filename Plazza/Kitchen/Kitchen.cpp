@@ -27,6 +27,7 @@ Kitchen::Kitchen(
     , m_multiplier(multiplier)
     , m_id(s_nextId++)
     , m_hasForclosureStarted(false)
+    , m_isRoutineRunning(true)
 {
     Start();
     pipe = std::make_unique<Pipe>(
@@ -63,11 +64,11 @@ void Kitchen::Routine(void)
     pipe->Open();
     m_toReception->Open();
 
-    int cycle = 0;
-    while (cycle < 10)
+    while (m_isRoutineRunning)
     {
-        std::cout << "Kitchen " << m_id << " is running" << std::endl;
+        // std::cout << "Kitchen " << m_id << " is running" << std::endl;
 
+        int cycle = 0;
         while (const auto& message = pipe->PollMessage())
         {
             // get pizza order
@@ -80,17 +81,25 @@ void Kitchen::Routine(void)
                 });
                 std::cout << "Kitchen " << m_id << " status sent" << std::endl;
             }
+            else if (message->Is<Message::Order>())
+            {
+                m_toReception->SendMessage(Message::Order{m_id, (uint16_t)cycle});
+                std::cout << "Kitchen " << m_id << " Order sent" << std::endl;
+            }
         }
-
-        if (cycle == 5)
-        {
-            PizzaFactory& factory = PizzaFactory::GetInstance();
-            m_toReception->SendMessage(Message::CookedPizza{
-                m_id,
-                factory.CreatePizza("regina", IPizza::Size::XL)->Pack()
-            });
-        }
-
+        std::cout << "shutting down" << std::endl;
+        ForClosure();
+        ForClosureCheck();
+        // send pizza
+        // if (cycle == 5)
+        // {
+        //     PizzaFactory& factory = PizzaFactory::GetInstance();
+        //     m_toReception->SendMessage(Message::CookedPizza{
+        //         m_id,
+        //         factory.CreatePizza("regina", IPizza::Size::XL)->Pack()
+        //     });
+        // }
+        
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         cycle++;
     }
@@ -110,8 +119,8 @@ size_t Kitchen::GetID(void) const
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::SendStatus(void)
 {
-
-    Message status = Message::Status{m_id, };
+    std::string pack = m_stock->Pack();
+    Message status = Message::Status{m_id, pack};
     m_toReception->SendMessage(status);
     // send stocklist
     // passive amount of cooks
@@ -164,6 +173,7 @@ void Kitchen::ForClosure(void)
 {
     m_toReception->SendMessage(Message::Closed{m_id});
     m_cooks.clear();
+    m_isRoutineRunning = false;
 }
 
 } // !namespace Plazza

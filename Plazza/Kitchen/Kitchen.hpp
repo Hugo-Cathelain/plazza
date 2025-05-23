@@ -51,6 +51,7 @@ private:
     bool m_hasForclosureStarted;                    //<!
     std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
     SteadyClock::TimePoint m_forclosureTime;        //<!
+    bool m_isRoutineRunning;                        //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
