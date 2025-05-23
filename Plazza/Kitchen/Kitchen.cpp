@@ -25,6 +25,7 @@ Kitchen::Kitchen(
     : Process(std::bind(&Kitchen::Routine, this))
     , m_restockTime(restockTime)
     , m_multiplier(multiplier)
+    , m_cookCount(numberOfCooks)
     , m_id(s_nextId++)
     , m_hasForclosureStarted(false)
     , m_isRoutineRunning(true)
