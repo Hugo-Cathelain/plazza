@@ -125,7 +125,7 @@ std::string APizza::SizeToString(IPizza::Size size)
 ///////////////////////////////////////////////////////////////////////////////
 std::string APizza::ToString(void) const
 {
-    return (m_name + "(" + SizeToString(m_size) + ")");
+    return (SizeToString(m_size) + " " + m_name);
 }
 
 } // !namespace Plazza
