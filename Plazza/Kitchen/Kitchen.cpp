@@ -27,8 +27,8 @@ Kitchen::Kitchen(
     , m_id(s_nextId++)
 {
     Start();
-    pipe = std::make_unique<Pipe>(RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::WRITE_ONLY);
-
+    pipe = std::make_unique<Pipe>(
+        RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::WRITE_ONLY);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,11 +52,13 @@ size_t Kitchen::getId(void)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::KitchenForclosed(void)
 {
-    pipe = std::make_unique<Pipe>(RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::READ_ONLY);
-    m_toReception = std::make_unique<Pipe>(KITCHEN_TO_RECEPTION_PIPE, Pipe::OpenMode::WRITE_ONLY);
+    pipe = std::make_unique<Pipe>(
+        RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::READ_ONLY);
+    m_toReception = std::make_unique<Pipe>(
+        KITCHEN_TO_RECEPTION_PIPE, Pipe::OpenMode::WRITE_ONLY);
 
     m_toReception->Open();
-    m_toReception->SendMessage(Message::Closed{});
+    m_toReception->SendMessage(Message::Closed{m_id});
     m_toReception->Close();
 }
 
