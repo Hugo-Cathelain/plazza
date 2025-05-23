@@ -5,6 +5,7 @@
 #include "iostream"
 #include "IPC/Message.hpp"
 #include "IPC/Pipe.hpp"
+#include "Pizza/APizza.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -20,14 +21,25 @@ Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
         KITCHEN_TO_RECEPTION_PIPE,
         Pipe::OpenMode::READ_ONLY
     ))
+    , m_manager(std::bind(&Reception::ManagerThread, this))
+    , m_shutdown(false)
 {
     m_pipe->Open();
+    m_manager.Start();
     CreateKitchen();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 Reception::~Reception()
-{}
+{
+    m_shutdown = true;
+    m_manager.running = false;
+
+    if (m_manager.Joinable())
+    {
+        m_manager.Join();
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::DisplayStatus(void)
@@ -75,6 +87,37 @@ void Reception::RemoveKitchen(size_t id)
         }),
         m_kitchens.end()
     );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void Reception::ManagerThread(void)
+{
+    while (m_manager.running && !m_shutdown)
+    {
+        while (const auto& message = m_pipe->PollMessage())
+        {
+            if (const auto& status = message->GetIf<Message::Status>())
+            {
+                if (auto kitchen = GetKitchenByID(status->id))
+                {
+                    kitchen.value()->status = *status;
+                }
+            }
+            else if (const auto& cooked = message->GetIf<Message::CookedPizza>())
+            {
+                if (auto pizza = APizza::Unpack(cooked->pizza))
+                {
+                    std::string msg = pizza.value()->ToString();
+
+                    msg = (msg[0] == 'E' ? "An " : "A ") + msg + " is ready!";
+
+                    std::cout << msg << std::endl;
+                }
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

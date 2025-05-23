@@ -90,7 +90,7 @@ bool Stock::WaitAndReserveIngredients(
 ///////////////////////////////////////////////////////////////////////////////
 void Stock::Routine(void)
 {
-    while (m_running)
+    while (running)
     {
         std::this_thread::sleep_for(m_restockTime);
 

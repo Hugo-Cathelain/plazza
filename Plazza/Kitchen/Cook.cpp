@@ -24,7 +24,7 @@ Cook::Cook(Kitchen& kitchen, Stock& stock)
 ///////////////////////////////////////////////////////////////////////////////
 void Cook::Routine(void)
 {
-    while (m_running)
+    while (running)
     {
         if (true) // Get next pizza with 1sec timeout
         {

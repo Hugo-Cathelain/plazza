@@ -114,11 +114,11 @@ std::optional<std::unique_ptr<IPizza>> IPizza::Unpack(uint16_t packed)
 ///////////////////////////////////////////////////////////////////////////////
 std::string APizza::SizeToString(IPizza::Size size)
 {
-    if (size == IPizza::Size::S) return ("S");
-    if (size == IPizza::Size::M) return ("M");
-    if (size == IPizza::Size::L) return ("L");
-    if (size == IPizza::Size::XL) return ("XL");
-    if (size == IPizza::Size::XXL) return ("XXL");
+    if (size == IPizza::Size::S) return ("Small");
+    if (size == IPizza::Size::M) return ("Medium");
+    if (size == IPizza::Size::L) return ("Large");
+    if (size == IPizza::Size::XL) return ("Extra Large");
+    if (size == IPizza::Size::XXL) return ("Extra Extra Large");
     return ("");
 }
 

@@ -4,6 +4,7 @@
 #include "Kitchen/Kitchen.hpp"
 #include "IPC/Message.hpp"
 #include "IPC/Pipe.hpp"
+#include "Pizza/PizzaFactory.hpp"
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,6 +72,15 @@ void Kitchen::Routine(void)
                 });
                 std::cout << "Kitchen " << m_id << " status sent" << std::endl;
             }
+        }
+
+        if (cycle == 5)
+        {
+            PizzaFactory& factory = PizzaFactory::GetInstance();
+            m_toReception->SendMessage(Message::CookedPizza{
+                m_id,
+                factory.CreatePizza("regina", IPizza::Size::XL)->Pack()
+            });
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
