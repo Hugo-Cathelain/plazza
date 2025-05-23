@@ -24,12 +24,14 @@ APizza::APizza(
     IPizza::Type type,
     IPizza::Size size,
     std::chrono::seconds baseCookingTime,
-    const std::vector<Ingredient>& ingredients
+    const std::vector<Ingredient>& ingredients,
+    const std::string& name
 )
     : m_type(type)
     , m_size(size)
     , m_baseCookingTime(baseCookingTime)
     , m_ingredients(ingredients)
+    , m_name(name)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,6 +109,23 @@ std::optional<std::unique_ptr<IPizza>> IPizza::Unpack(uint16_t packed)
     }
 
     return (std::make_optional(std::move(pizzaUniquePtr)));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::string APizza::SizeToString(IPizza::Size size)
+{
+    if (size == IPizza::Size::S) return ("S");
+    if (size == IPizza::Size::M) return ("M");
+    if (size == IPizza::Size::L) return ("L");
+    if (size == IPizza::Size::XL) return ("XL");
+    if (size == IPizza::Size::XXL) return ("XXL");
+    return ("");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::string APizza::ToString(void) const
+{
+    return (m_name + "(" + SizeToString(m_size) + ")");
 }
 
 } // !namespace Plazza

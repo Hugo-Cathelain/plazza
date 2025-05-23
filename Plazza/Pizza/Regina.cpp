@@ -11,13 +11,16 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 Regina::Regina(IPizza::Size size)
-    : APizza(Type::Regina, size, std::chrono::seconds(2), {
-        Ingredient::DOUGH,
-        Ingredient::TOMATO,
-        Ingredient::GRUYERE,
-        Ingredient::HAM,
-        Ingredient::MUSHROOM
-    })
+    : APizza(
+        Type::Regina, size, std::chrono::seconds(2),
+        {
+            Ingredient::DOUGH,
+            Ingredient::TOMATO,
+            Ingredient::GRUYERE,
+            Ingredient::HAM,
+            Ingredient::MUSHROOM
+        }, "Regina"
+    )
 {}
 
 } // !namespace Plazza

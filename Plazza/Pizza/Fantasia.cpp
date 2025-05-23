@@ -11,13 +11,16 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 Fantasia::Fantasia(IPizza::Size size)
-    : APizza(Type::Fantasia, size, std::chrono::seconds(4), {
-        Ingredient::DOUGH,
-        Ingredient::TOMATO,
-        Ingredient::EGGPLANT,
-        Ingredient::GOAT_CHEESE,
-        Ingredient::CHIEF_LOVE
-    })
+    : APizza(
+        Type::Fantasia, size, std::chrono::seconds(4),
+        {
+            Ingredient::DOUGH,
+            Ingredient::TOMATO,
+            Ingredient::EGGPLANT,
+            Ingredient::GOAT_CHEESE,
+            Ingredient::CHIEF_LOVE
+        }, "Fantasia"
+    )
 {}
 
 } // !namespace Plazza

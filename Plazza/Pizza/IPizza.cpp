@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
-#include "Pizza/Margarita.hpp"
+#include "Pizza/IPizza.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -10,15 +10,10 @@ namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-Margarita::Margarita(IPizza::Size size)
-    : APizza(
-        Type::Margarita, size, std::chrono::seconds(1),
-        {
-            Ingredient::DOUGH,
-            Ingredient::TOMATO,
-            Ingredient::GRUYERE
-        }, "Margarita"
-    )
-{}
+std::ostream& operator<<(std::ostream& os, const IPizza& pizza)
+{
+    os << pizza.ToString();
+    return (os);
+}
 
 } // !namespace Plazza

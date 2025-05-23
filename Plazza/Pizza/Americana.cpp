@@ -11,12 +11,15 @@ namespace Plazza
 
 ///////////////////////////////////////////////////////////////////////////////
 Americana::Americana(IPizza::Size size)
-    : APizza(Type::Americana, size, std::chrono::seconds(2), {
-        Ingredient::DOUGH,
-        Ingredient::TOMATO,
-        Ingredient::GRUYERE,
-        Ingredient::STEAK
-    })
+    : APizza(
+        Type::Americana, size, std::chrono::seconds(2),
+        {
+            Ingredient::DOUGH,
+            Ingredient::TOMATO,
+            Ingredient::GRUYERE,
+            Ingredient::STEAK
+        }, "Americana"
+    )
 {}
 
 } // !namespace Plazza
