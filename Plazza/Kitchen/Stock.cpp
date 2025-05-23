@@ -3,7 +3,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "Stock.hpp"
 #include "Kitchen/Kitchen.hpp"
+#include "Errors/ParsingException.hpp"
 #include <iostream>
+#include <sstream>
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Namespace Plazza
@@ -28,6 +30,48 @@ Stock::Stock(std::chrono::milliseconds restockTime, Kitchen& kitchen)
 ///////////////////////////////////////////////////////////////////////////////
 Stock::~Stock()
 {}
+
+///////////////////////////////////////////////////////////////////////////////
+std::map<Ingredient, int> Stock::Unpack(const std::string& stockStr)
+{
+    std::map<Ingredient, int> stock;
+
+    std::stringstream iss(stockStr);
+
+    for (int i = 0; i < static_cast<int>(Ingredient::SIZE); i++)
+    {
+        int quantity = 0;
+
+        if ((iss >> quantity))
+        {
+            stock[static_cast<Ingredient>(i)] = quantity;
+        }
+        else
+        {
+            throw ParsingException("Invalid packed stock");
+        }
+    }
+
+    return (stock);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::string Stock::Pack(void) const
+{
+    std::string buffer;
+
+    for (int i = 0; i < static_cast<int>(Ingredient::SIZE); i++)
+    {
+        buffer += std::to_string(m_stock.at(static_cast<Ingredient>(i)));
+
+        if (i != static_cast<int>(Ingredient::SIZE) - 1)
+        {
+            buffer += ' ';
+        }
+    }
+
+    return (buffer);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 bool Stock::TryReserveIngredients(const std::vector<Ingredient>& ingredients)
