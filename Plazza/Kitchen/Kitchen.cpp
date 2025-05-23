@@ -82,7 +82,8 @@ void Kitchen::Routine(void)
             }
             else if (message->Is<Message::Order>())
             {
-                m_toReception->SendMessage(Message::Order{m_id, (uint16_t)cycle});
+                const auto& order = message->GetIf<Message::Order>()->pizza;
+                std::cout << "pizza pizza: " << order << std::endl;
                 std::cout << "Kitchen " << m_id << " Order sent" << std::endl;
             }
         }

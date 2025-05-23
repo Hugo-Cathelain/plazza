@@ -15,6 +15,8 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <queue>
+#include <Pizza/IPizza.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -52,6 +54,7 @@ private:
     std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
     SteadyClock::TimePoint m_forclosureTime;        //<!
     bool m_isRoutineRunning;                        //<!
+    std::queue<IPizza> pizzaQueue;                  //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
