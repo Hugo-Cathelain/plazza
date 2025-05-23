@@ -27,11 +27,27 @@ void Reception::DisplayStatus(void)
 {
     std::cout << "Pizzeria Status:" << std::endl;
 
+    std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
     for (const auto& kitchen : m_kitchens)
     {
         // TODO: thing to do here
         (void)kitchen;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::optional<std::unique_ptr<Kitchen>&> Reception::GetKitchenByID(size_t id)
+{
+    auto it = std::find_if(m_kitchens.begin(), m_kitchens.end(),
+        [id](const std::unique_ptr<Kitchen>& kitchen) {
+            return (kitchen->getId() == id);
+        });
+
+    if (it != m_kitchens.end())
+    {
+        return (*it);
+    }
+    return (std::nullopt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,7 +63,7 @@ void Reception::RemoveKitchen(size_t id)
 {
     m_kitchens.erase(std::remove_if(m_kitchens.begin(), m_kitchens.end(),
         [id](const std::unique_ptr<Kitchen>& kitchen) {
-            return kitchen->getId() == id;
+            return (kitchen->getId() == id);
         }),
         m_kitchens.end()
     );
