@@ -16,7 +16,14 @@ namespace Plazza
 Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
     : m_restockTime(restockTime)
     , m_cookCount(CookCount)
-{}
+    , m_pipe(std::make_unique<Pipe>(
+        KITCHEN_TO_RECEPTION_PIPE,
+        Pipe::OpenMode::READ_ONLY
+    ))
+{
+    m_pipe->Open();
+    CreateKitchen();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 Reception::~Reception()
@@ -30,17 +37,18 @@ void Reception::DisplayStatus(void)
     std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
     for (const auto& kitchen : m_kitchens)
     {
+        kitchen->pipe->SendMessage(Message::RequestStatus{});
         // TODO: thing to do here
         (void)kitchen;
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::optional<std::unique_ptr<Kitchen>&> Reception::GetKitchenByID(size_t id)
+std::optional<std::shared_ptr<Kitchen>> Reception::GetKitchenByID(size_t id)
 {
     auto it = std::find_if(m_kitchens.begin(), m_kitchens.end(),
-        [id](const std::unique_ptr<Kitchen>& kitchen) {
-            return (kitchen->getId() == id);
+        [id](const std::shared_ptr<Kitchen>& kitchen) {
+            return (kitchen->GetID() == id);
         });
 
     if (it != m_kitchens.end())
@@ -53,7 +61,7 @@ std::optional<std::unique_ptr<Kitchen>&> Reception::GetKitchenByID(size_t id)
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::CreateKitchen(void)
 {
-    m_kitchens.push_back(std::make_unique<Kitchen>(
+    m_kitchens.push_back(std::make_shared<Kitchen>(
         m_cookCount, 1.0, m_restockTime
     ));
 }
@@ -62,8 +70,8 @@ void Reception::CreateKitchen(void)
 void Reception::RemoveKitchen(size_t id)
 {
     m_kitchens.erase(std::remove_if(m_kitchens.begin(), m_kitchens.end(),
-        [id](const std::unique_ptr<Kitchen>& kitchen) {
-            return (kitchen->getId() == id);
+        [id](const std::shared_ptr<Kitchen>& kitchen) {
+            return (kitchen->GetID() == id);
         }),
         m_kitchens.end()
     );

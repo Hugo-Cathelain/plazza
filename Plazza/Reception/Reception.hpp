@@ -10,6 +10,7 @@
 #include "Utils/Timer.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Reception/Parser.hpp"
+#include "IPC/Pipe.hpp"
 #include <optional>
 #include <memory>
 
@@ -29,9 +30,10 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////////
-    std::vector<std::unique_ptr<Kitchen>> m_kitchens;   //<!
+    std::vector<std::shared_ptr<Kitchen>> m_kitchens;   //<!
     std::chrono::milliseconds m_restockTime;            //<!
     size_t m_cookCount;                                 //<!
+    std::unique_ptr<Pipe> m_pipe;                       //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -58,7 +60,7 @@ private:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::optional<std::unique_ptr<Kitchen>&> GetKitchenByID(size_t id);
+    std::optional<std::shared_ptr<Kitchen>> GetKitchenByID(size_t id);
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

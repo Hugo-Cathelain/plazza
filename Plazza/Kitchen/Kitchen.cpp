@@ -24,11 +24,15 @@ Kitchen::Kitchen(
     : Process(std::bind(&Kitchen::Routine, this))
     , m_restockTime(restockTime)
     , m_multiplier(multiplier)
+    , m_cookCount(numberOfCooks)
     , m_id(s_nextId++)
 {
     Start();
     pipe = std::make_unique<Pipe>(
-        RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::WRITE_ONLY);
+        std::string(RECEPTION_TO_KITCHEN_PIPE) + "_" + std::to_string(m_id),
+        Pipe::OpenMode::WRITE_ONLY
+    );
+    pipe->Open();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,28 +42,48 @@ Kitchen::~Kitchen()
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::Routine(void)
 {
-    std::cout << "Hello From Kitchen" << std::endl;
     m_stock = std::make_unique<Stock>(m_restockTime, *this);
-    KitchenForclosed();
+    pipe = std::make_unique<Pipe>(
+        std::string(RECEPTION_TO_KITCHEN_PIPE) + "_" + std::to_string(m_id),
+        Pipe::OpenMode::READ_ONLY
+    );
+    m_toReception = std::make_unique<Pipe>(
+        std::string(KITCHEN_TO_RECEPTION_PIPE),
+        Pipe::OpenMode::WRITE_ONLY
+    );
+
+    std::cout << "Kitchen " << m_id << " is started" << std::endl;
+
+    pipe->Open();
+    m_toReception->Open();
+
+    int cycle = 0;
+    while (cycle < 10)
+    {
+        std::cout << "Kitchen " << m_id << " is running" << std::endl;
+
+        while (const auto& message = pipe->PollMessage())
+        {
+            if (message->Is<Message::RequestStatus>())
+            {
+                m_toReception->SendMessage(Message::Status{
+                    m_id, std::to_string(cycle)
+                });
+                std::cout << "Kitchen " << m_id << " status sent" << std::endl;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        cycle++;
+    }
+
+    std::cout << "Kitchen " << m_id << " is closing" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-size_t Kitchen::getId(void)
+size_t Kitchen::GetID(void) const
 {
     return (m_id);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-void Kitchen::KitchenForclosed(void)
-{
-    pipe = std::make_unique<Pipe>(
-        RECEPTION_TO_KITCHEN_PIPE + m_id, Pipe::OpenMode::READ_ONLY);
-    m_toReception = std::make_unique<Pipe>(
-        KITCHEN_TO_RECEPTION_PIPE, Pipe::OpenMode::WRITE_ONLY);
-
-    m_toReception->Open();
-    m_toReception->SendMessage(Message::Closed{m_id});
-    m_toReception->Close();
 }
 
 } // !namespace Plazza
