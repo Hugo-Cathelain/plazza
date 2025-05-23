@@ -30,4 +30,12 @@ SteadyClock::Duration SteadyClock::Elapsed(
     return ((current - start));
 }
 
+///////////////////////////////////////////////////////////////////////////////
+int64_t SteadyClock::DurationToMs(Duration duration)
+{
+    auto milliseconds = std::chrono::duration_cast<SteadyClock::Milliseconds>(duration).count();
+    return (milliseconds);
+}
+
+
 } // Plazza
