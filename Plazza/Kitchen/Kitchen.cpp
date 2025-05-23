@@ -25,8 +25,8 @@ Kitchen::Kitchen(
     : Process(std::bind(&Kitchen::Routine, this))
     , m_restockTime(restockTime)
     , m_multiplier(multiplier)
-    , m_cookCount(numberOfCooks)
     , m_id(s_nextId++)
+    , m_hasForclosureStarted(false)
 {
     Start();
     pipe = std::make_unique<Pipe>(
@@ -34,6 +34,11 @@ Kitchen::Kitchen(
         Pipe::OpenMode::WRITE_ONLY
     );
     pipe->Open();
+
+    for (size_t i = 0; i != m_cookCount; i++)
+    {
+        m_cooks.push_back(std::make_unique<Cook>(*this, *m_stock));
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,6 +70,9 @@ void Kitchen::Routine(void)
 
         while (const auto& message = pipe->PollMessage())
         {
+            // get pizza order
+            // check death
+            // return status
             if (message->Is<Message::RequestStatus>())
             {
                 m_toReception->SendMessage(Message::Status{
@@ -91,15 +99,10 @@ void Kitchen::Routine(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-size_t Kitchen::GetID(void) const
+void Kitchen::ForClosure(void)
 {
-    return (m_id);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
-{
-    m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
+    m_toReception->SendMessage(Message::Closed{m_id});
+    m_cooks.clear();
 }
 
 } // !namespace Plazza

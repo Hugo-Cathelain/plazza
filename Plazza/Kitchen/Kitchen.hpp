@@ -10,6 +10,7 @@
 #include "Kitchen/Cook.hpp"
 #include "Kitchen/Stock.hpp"
 #include "Kitchen/ThreadPool.hpp"
+#include "Utils/Timer.hpp"
 #include "IPC/Pipe.hpp"
 #include <vector>
 #include <memory>
@@ -38,15 +39,18 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds m_restockTime;    //<!
-    double m_multiplier;                        //<!
-    size_t m_cookCount;                         //<!
-    std::atomic<bool> m_running;                //<!
-    std::atomic<int> m_activePizzaCount;        //<!
-    std::atomic<int> m_cooksIdleCount;          //<!
-    std::unique_ptr<Stock> m_stock;             //<!
-    size_t m_id;                                //<!
-    std::unique_ptr<Pipe> m_toReception;        //<!
+    std::chrono::milliseconds m_restockTime;        //<!
+    double m_multiplier;                            //<!
+    size_t m_cookCount;                             //<!
+    std::atomic<bool> m_running;                    //<!
+    std::atomic<int> m_activePizzaCount;            //<!
+    std::atomic<int> m_cooksIdleCount;              //<!
+    std::unique_ptr<Stock> m_stock;                 //<!
+    size_t m_id;                                    //<!
+    std::unique_ptr<Pipe> m_toReception;            //<!
+    bool m_hasForclosureStarted;                    //<!
+    std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
+    SteadyClock::TimePoint m_forclosureTime;        //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -91,6 +95,31 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     size_t GetID(void) const;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \return
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    void ForClosure(void);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \return
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    void SendStatus(void);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \return
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    void ForClosureCheck(void);
+
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
