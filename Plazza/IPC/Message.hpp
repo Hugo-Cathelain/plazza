@@ -54,6 +54,8 @@ public:
     {
         size_t id;
         std::string stock;
+        int64_t timestamp;
+        size_t idleCount;
     };
 
     ///////////////////////////////////////////////////////////////////////////
