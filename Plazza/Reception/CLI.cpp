@@ -67,7 +67,6 @@ void CLI::ProcessCommand(const std::string& line)
     if (line == "status")
     {
         m_reception.DisplayStatus();
-        // TODO: Add reception DisplayStatus function
     }
     else
     {
