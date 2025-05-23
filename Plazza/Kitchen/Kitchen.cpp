@@ -123,6 +123,42 @@ void Kitchen::SendStatus(void)
     // look up cv
 }
 
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::ForClosureCheck(void)
+{
+    bool idleCooks = false;
+    for (const auto& cooks : m_cooks)
+    {
+        if (!cooks->GetStatus())
+        {
+            idleCooks = true;
+        }
+    }
+
+    if (idleCooks && !m_hasForclosureStarted)
+    {
+        m_forclosureTime = SteadyClock::Now();
+        m_hasForclosureStarted = true;
+    }
+
+    if (!idleCooks)
+    {
+        m_hasForclosureStarted = false;
+        return;
+    }
+
+    int64_t elapsedMs = SteadyClock::DurationToMs(
+        SteadyClock::Elapsed(m_forclosureTime, SteadyClock::Now()));
+
+    if (elapsedMs >= 5000)
+    {
+        ForClosure();
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosure(void)
 {
