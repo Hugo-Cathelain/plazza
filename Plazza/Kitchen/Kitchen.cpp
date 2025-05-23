@@ -98,8 +98,6 @@ void Kitchen::Routine(void)
     std::cout << "Kitchen " << m_id << " is closing" << std::endl;
 }
 
-
-
 //TODO: getnextpizza()
 //TODO: getnextpizza
 
@@ -108,7 +106,6 @@ size_t Kitchen::GetID(void) const
 {
     return (m_id);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::SendStatus(void)
@@ -123,9 +120,11 @@ void Kitchen::SendStatus(void)
     // look up cv
 }
 
-
-
-
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
+{
+    m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosureCheck(void)
@@ -159,6 +158,7 @@ void Kitchen::ForClosureCheck(void)
         ForClosure();
     }
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosure(void)
 {
