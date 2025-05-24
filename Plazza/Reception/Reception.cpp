@@ -175,7 +175,11 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
                     kitchen->GetID(),
                     pizza->Pack()
                 });
-                kitchen->status.pizzaCount++;
+                if (kitchen->status.idleCount > 0) {
+                    kitchen->status.idleCount--;
+                } else {
+                    kitchen->status.pizzaCount++;
+                }
                 needNewKitchen = false;
                 kitchensCopy = m_kitchens;
                 break;
