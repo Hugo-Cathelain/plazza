@@ -64,6 +64,7 @@ void Reception::DisplayStatus(void)
                   << (m_cookCount - st.idleCount) + st.pizzaCount << ")"
                   << std::endl;
         std::cout << "\t\tStock: " << st.stock << std::endl;
+        std::cout << "\t\tClosure Time: " << st.timestamp << std::endl;
     }
 }
 
