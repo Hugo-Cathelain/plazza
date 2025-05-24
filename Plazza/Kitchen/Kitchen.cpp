@@ -198,11 +198,6 @@ std::optional<uint16_t> Kitchen::TryGetNextPizza(
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::AddPizzaToQueue(uint16_t pizza)
 {
-    if (!pizza)
-    {
-        return;
-    }
-
     {
         std::lock_guard<std::mutex> lock(m_pizzaQueueMutex);
         m_pizzaQueue.push(pizza);
