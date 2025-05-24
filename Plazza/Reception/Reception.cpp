@@ -49,7 +49,7 @@ Reception::~Reception()
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::DisplayStatus(void)
 {
-    std::lock_guard<std::mutex> lock(m_statusMutex);
+    std::lock_guard<std::mutex> lock(m_kitchenMutex);
     std::cout << "Pizzeria Status:" << std::endl;
 
     std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
@@ -71,6 +71,7 @@ void Reception::DisplayStatus(void)
 ///////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<Kitchen>> Reception::GetKitchenByID(size_t id)
 {
+    std::lock_guard<std::mutex> lock(m_kitchenMutex);
     auto it = std::find_if(m_kitchens.begin(), m_kitchens.end(),
         [id](const std::shared_ptr<Kitchen>& kitchen) {
             return (kitchen->GetID() == id);
@@ -86,6 +87,7 @@ std::optional<std::shared_ptr<Kitchen>> Reception::GetKitchenByID(size_t id)
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::CreateKitchen(void)
 {
+    std::lock_guard<std::mutex> lock(m_kitchenMutex);
     m_kitchens.push_back(std::make_shared<Kitchen>(
         m_cookCount, 1.0, m_restockTime
     ));
@@ -94,6 +96,7 @@ void Reception::CreateKitchen(void)
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::RemoveKitchen(size_t id)
 {
+    std::lock_guard<std::mutex> lock(m_kitchenMutex);
     m_kitchens.erase(std::remove_if(m_kitchens.begin(), m_kitchens.end(),
         [id](const std::shared_ptr<Kitchen>& kitchen) {
             return (kitchen->GetID() == id);
@@ -111,10 +114,15 @@ void Reception::ManagerThread(void)
         {
             if (const auto& status = message->GetIf<Message::Status>())
             {
-                if (auto kitchen = GetKitchenByID(status->id))
+                std::lock_guard<std::mutex> lock(m_kitchenMutex);
+                auto it = std::find_if(m_kitchens.begin(), m_kitchens.end(),
+                [target_id = status->id](const std::shared_ptr<Kitchen>& k_ptr)
                 {
-                    std::lock_guard<std::mutex> lock(m_statusMutex);
-                    kitchen.value()->status = *status;
+                    return (k_ptr->GetID() == target_id);
+                });
+                if (it != m_kitchens.end())
+                {
+                    (*it)->status = *status;
                 }
             }
             else if (const auto& cooked = message->GetIf<Message::CookedPizza>())
@@ -148,59 +156,114 @@ void Reception::ManagerThread(void)
 void Reception::ProcessOrders(const Parser::Orders& orders)
 {
     if (orders.empty())
+    {
         return;
-    if (m_kitchens.empty()) {
+    }
+
+    bool needsInitialKitchen = false;
+    {
+        std::lock_guard<std::mutex> lock(m_kitchenMutex);
+        if (m_kitchens.empty())
+        {
+            needsInitialKitchen = true;
+        }
+    }
+    if (needsInitialKitchen)
+    {
         CreateKitchen();
     }
 
-    std::vector<std::shared_ptr<Kitchen>> kitchensCopy = m_kitchens;
+    std::vector<std::shared_ptr<Kitchen>> currentKitchensSnapshot;
+    {
+        std::lock_guard<std::mutex> lock(m_kitchenMutex);
+        currentKitchensSnapshot = m_kitchens;
+    }
 
-    for (const auto& pizza : orders) {
+    for (const auto& pizza : orders)
+    {
         size_t totalProcessingPizzas = 0;
-        bool needNewKitchen = true;
+        bool assignedToExistingKitchen = false;
+        std::shared_ptr<Kitchen> targetKitchen = nullptr;
 
-        std::sort(kitchensCopy.begin(), kitchensCopy.end(),
-            [](const auto& kitchen1, const auto& kitchen2) {
-                if (kitchen1->status.idleCount != kitchen2->status.idleCount) {
-                    return kitchen1->status.idleCount > kitchen2->status.idleCount;
-                }
-                if (kitchen1->status.pizzaCount != kitchen2->status.pizzaCount) {
-                    return kitchen1->status.pizzaCount < kitchen2->status.pizzaCount;
-                }
-                return kitchen1->GetID() < kitchen2->GetID();
+        std::sort(currentKitchensSnapshot.begin(), currentKitchensSnapshot.end(),
+        [&](const auto& kitchen1, const auto& kitchen2)
+        {
+            if (kitchen1->status.idleCount != kitchen2->status.idleCount)
+            {
+                return (kitchen1->status.idleCount > kitchen2->status.idleCount);
             }
-        );
+            if (kitchen1->status.pizzaCount != kitchen2->status.pizzaCount)
+            {
+                return (kitchen1->status.pizzaCount < kitchen2->status.pizzaCount);
+            }
+            return (kitchen1->GetID() < kitchen2->GetID());
+        });
 
-        for (const auto& kitchen : kitchensCopy) {
-            totalProcessingPizzas = m_cookCount - kitchen->status.idleCount + kitchen->status.pizzaCount;
-            std::cout << "Kitchen ID: " << kitchen->GetID()
-                      << ", Idle Cooks: " << kitchen->status.idleCount
-                      << ", Processing Pizzas: " << totalProcessingPizzas
-                      << std::endl;
-            if (totalProcessingPizzas < static_cast<size_t>(1.7 * m_cookCount)) {
-                kitchen->pipe->SendMessage(Message::Order{
-                    kitchen->GetID(),
-                    pizza->Pack()
-                });
-                if (kitchen->status.idleCount > 0) {
-                    kitchen->status.idleCount--;
-                } else {
-                    kitchen->status.pizzaCount++;
+        if (currentKitchensSnapshot.empty())
+        {
+             assignedToExistingKitchen = false;
+        }
+        else
+        {
+            for (const auto& kitchen : currentKitchensSnapshot)
+            {
+                totalProcessingPizzas = m_cookCount - kitchen->status.idleCount + kitchen->status.pizzaCount;
+                if (totalProcessingPizzas < static_cast<size_t>(1.7 * m_cookCount))
+                {
+                    kitchen->pipe->SendMessage(Message::Order{
+                        kitchen->GetID(),
+                        pizza->Pack()
+                    });
+                    if (kitchen->status.idleCount > 0)
+                    {
+                        kitchen->status.idleCount--;
+                    }
+                    else
+                    {
+                        kitchen->status.pizzaCount++;
+                    }
+                    assignedToExistingKitchen = true;
+                    targetKitchen = kitchen;
+                    break;
                 }
-                needNewKitchen = false;
-                kitchensCopy = m_kitchens;
-                break;
             }
         }
 
-        if (needNewKitchen) {
+
+        if (!assignedToExistingKitchen)
+        {
             CreateKitchen();
-            m_kitchens.back()->pipe->SendMessage(Message::Order{
-                m_kitchens.back()->GetID(),
-                pizza->Pack()
-            });
-            kitchensCopy = m_kitchens;
-            continue;
+
+            std::shared_ptr<Kitchen> newKitchen = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(m_kitchenMutex);
+                if (!m_kitchens.empty())
+                {
+                    newKitchen = m_kitchens.back();
+                }
+                currentKitchensSnapshot = m_kitchens;
+            }
+
+            if (newKitchen)
+            {
+                newKitchen->pipe->SendMessage(Message::Order{
+                    newKitchen->GetID(),
+                    pizza->Pack()
+                });
+                if (newKitchen->status.idleCount > 0)
+                {
+                    newKitchen->status.idleCount--;
+                }
+                else
+                {
+                    newKitchen->status.pizzaCount++;
+                }
+                targetKitchen = newKitchen;
+            }
+            else
+            {
+                std::cerr << "Error: Failed to assign order, new kitchen could not be retrieved." << std::endl;
+            }
         }
     }
 }
@@ -219,24 +282,24 @@ void Reception::WindowRoutine(void)
     const float screenApiHeight = static_cast<float>(desktop.height);
 
     auto get_view_and_content_heights =
-        [&](size_t p_kitchenCount) -> std::pair<float, float>
+        [&](size_t p_kitchenCount_lambda) -> std::pair<float, float>
     {
-        float contentH = RECEPTION_HEIGHT + p_kitchenCount * KITCHEN_HEIGHT;
+        float contentH = RECEPTION_HEIGHT + p_kitchenCount_lambda * KITCHEN_HEIGHT;
         float desiredWindowH = contentH;
-
         float maxPossibleWindowH = screenApiHeight - SCREEN_MARGIN;
-
         float windowH = std::min(desiredWindowH, maxPossibleWindowH);
         windowH = std::max(windowH, std::min(RECEPTION_HEIGHT, maxPossibleWindowH));
         windowH = std::max(windowH, 100.f);
-
         return {contentH, windowH};
     };
 
-    size_t kitchenCount = m_kitchens.size();
+    size_t kitchenCountSnapshot = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_kitchenMutex);
+        kitchenCountSnapshot = m_kitchens.size();
+    }
 
-    auto initial_dims = get_view_and_content_heights(kitchenCount);
-    float currentTotalContentHeight = initial_dims.first;
+    auto initial_dims = get_view_and_content_heights(kitchenCountSnapshot);
     float actualWindowHeight = initial_dims.second;
 
     sf::RenderWindow window(sf::VideoMode(
@@ -261,23 +324,21 @@ void Reception::WindowRoutine(void)
     sf::Sprite kitchenSprite(kitchensTexture);
     sf::Sprite backgroundSprite(backgroundTexture);
     sf::Music music;
-
     if (!music.openFromFile("Assets/Musics/Game.ogg"))
     {
         return;
     }
 
     view.setSize(sf::Vector2f(WINDOW_WIDTH, actualWindowHeight));
-    if (currentTotalContentHeight <= actualWindowHeight)
+    if (initial_dims.first <= actualWindowHeight)
     {
-        view.setCenter(WINDOW_WIDTH / 2.f, currentTotalContentHeight / 2.f);
+        view.setCenter(WINDOW_WIDTH / 2.f, initial_dims.first / 2.f);
     }
     else
     {
         view.setCenter(WINDOW_WIDTH / 2.f, actualWindowHeight / 2.f);
     }
     window.setView(view);
-
     music.setLoop(true);
     music.play();
 
@@ -293,51 +354,58 @@ void Reception::WindowRoutine(void)
             {
                 if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel)
                 {
-                    float liveContentHeight = RECEPTION_HEIGHT + kitchenCount * KITCHEN_HEIGHT;
-
+                    size_t current_kitchen_count_for_scroll = 0;
+                    {
+                        std::lock_guard<std::mutex> lock(m_kitchenMutex);
+                        current_kitchen_count_for_scroll = m_kitchens.size();
+                    }
+                    float liveContentHeight = RECEPTION_HEIGHT +
+                        current_kitchen_count_for_scroll * KITCHEN_HEIGHT;
                     float currentViewHeight = view.getSize().y;
 
                     if (liveContentHeight > currentViewHeight)
                     {
                         float scrollDelta = -event.mouseWheelScroll.delta * SCROLL_SPEED;
-
                         sf::Vector2f center = view.getCenter();
                         float newCenterY = center.y + scrollDelta;
-
                         float viewHalfHeight = currentViewHeight / 2.f;
                         float minCenterY = viewHalfHeight;
                         float maxCenterY = liveContentHeight - viewHalfHeight;
-
                         newCenterY = std::max(minCenterY, std::min(newCenterY, maxCenterY));
-
                         view.setCenter(center.x, newCenterY);
                         window.setView(view);
                     }
                 }
             }
         }
-
         if (!window.isOpen())
         {
             break;
         }
 
-        size_t newKitchenCountSnapshot = m_kitchens.size();
-        if (newKitchenCountSnapshot != kitchenCount)
+        std::vector<std::shared_ptr<Kitchen>> kitchensToDraw;
         {
-            auto new_dims = get_view_and_content_heights(newKitchenCountSnapshot);
+            std::lock_guard<std::mutex> lock(m_kitchenMutex);
+            kitchensToDraw = m_kitchens;
+        }
+
+        if (kitchensToDraw.size() != kitchenCountSnapshot)
+        {
+            auto new_dims = get_view_and_content_heights(kitchensToDraw.size());
             float newContentTotalHeight = new_dims.first;
             float newActualWindowHeight = new_dims.second;
 
             sf::Vector2f oldViewCenter = view.getCenter();
             sf::Vector2f oldViewSize = view.getSize();
 
-            window.setSize(sf::Vector2u(static_cast<unsigned int>(WINDOW_WIDTH), static_cast<unsigned int>(newActualWindowHeight)));
+            window.setSize(sf::Vector2u(
+                static_cast<unsigned int>(WINDOW_WIDTH),
+                static_cast<unsigned int>(newActualWindowHeight)
+            ));
             view.setSize(sf::Vector2f(WINDOW_WIDTH, newActualWindowHeight));
 
             float oldViewTop = oldViewCenter.y - oldViewSize.y / 2.f;
             float targetNewCenterY = oldViewTop + newActualWindowHeight / 2.f;
-
             float viewHalfHeightNew = newActualWindowHeight / 2.f;
             float minCenterY = viewHalfHeightNew;
             float maxCenterY = newContentTotalHeight - viewHalfHeightNew;
@@ -348,36 +416,33 @@ void Reception::WindowRoutine(void)
             }
             else
             {
-                targetNewCenterY = std::max(minCenterY, std::min(targetNewCenterY, maxCenterY));
+                targetNewCenterY = std::max(minCenterY,
+                    std::min(targetNewCenterY, maxCenterY));
             }
-
             view.setCenter(sf::Vector2f(WINDOW_WIDTH / 2.f, targetNewCenterY));
             window.setView(view);
-
-            kitchenCount = newKitchenCountSnapshot;
-            currentTotalContentHeight = newContentTotalHeight;
+            kitchenCountSnapshot = kitchensToDraw.size();
         }
 
-        backgroundSprite.setPosition(sf::Vector2f(0.0f, kitchenCount * KITCHEN_HEIGHT));
-
+        backgroundSprite.setPosition(sf::Vector2f(0.0f,
+            kitchensToDraw.size() * KITCHEN_HEIGHT));
         window.clear();
         window.draw(backgroundSprite);
 
-        for (size_t i = 0; i < kitchenCount; i++)
+        for (size_t i = 0; i < kitchensToDraw.size(); i++)
         {
-            kitchenSprite.setPosition(sf::Vector2f(0.0f, (kitchenCount - 1 - i) * KITCHEN_HEIGHT));
-
+            kitchenSprite.setPosition(sf::Vector2f(0.0f,
+                (kitchensToDraw.size() - 1 - i) * KITCHEN_HEIGHT));
             kitchenSprite.setTextureRect(sf::IntRect(
-                sf::Vector2i(0, (m_kitchens[i]->GetID() % 20) * static_cast<int>(KITCHEN_HEIGHT)),
-                sf::Vector2i(static_cast<int>(WINDOW_WIDTH), static_cast<int>(KITCHEN_HEIGHT))
+                sf::Vector2i(0, (kitchensToDraw[i]->GetID() % 20) *
+                    static_cast<int>(KITCHEN_HEIGHT)),
+                sf::Vector2i(static_cast<int>(WINDOW_WIDTH),
+                    static_cast<int>(KITCHEN_HEIGHT))
             ));
-
             window.draw(kitchenSprite);
         }
-
         window.display();
     }
-
     music.stop();
 }
 #endif
