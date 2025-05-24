@@ -120,6 +120,10 @@ void Reception::ManagerThread(void)
                     std::cout << msg << std::endl;
                 }
             }
+            else if (const auto& closed = message->GetIf<Message::Closed>())
+            {
+                RemoveKitchen(closed->id);
+            }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
