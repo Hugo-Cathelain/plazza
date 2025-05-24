@@ -76,12 +76,8 @@ void Kitchen::Routine(void)
     {
         // std::cout << "Kitchen " << m_id << " is running" << std::endl;
 
-        int cycle = 0;
         while (const auto& message = pipe->PollMessage())
         {
-            // get pizza order
-            // check death
-            // return status
             if (message->Is<Message::RequestStatus>())
             {
                 SendStatus();
@@ -95,18 +91,8 @@ void Kitchen::Routine(void)
             }
         }
         ForClosureCheck();
-        // send pizza
-        // if (cycle == 5)
-        // {
-        //     PizzaFactory& factory = PizzaFactory::GetInstance();
-        //     m_toReception->SendMessage(Message::CookedPizza{
-        //         m_id,
-        //         factory.CreatePizza("regina", IPizza::Size::XL)->Pack()
-        //     });
-        // }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        cycle++;
     }
 
     std::cout << "Kitchen " << m_id << " is closing" << std::endl;
@@ -125,7 +111,13 @@ size_t Kitchen::GetID(void) const
 void Kitchen::SendStatus(void)
 {
     std::string pack = m_stock->Pack();
-    Message status = Message::Status{m_id, pack, m_elapsedMs, static_cast<size_t>(m_idleCookCount)};
+    Message status = Message::Status{
+        m_id,
+        pack,
+        m_elapsedMs,
+        static_cast<size_t>(m_idleCookCount)
+    };
+
     m_toReception->SendMessage(status);
     // look up cv
 }
