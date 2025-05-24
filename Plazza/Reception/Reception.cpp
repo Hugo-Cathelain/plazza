@@ -173,96 +173,82 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         CreateKitchen();
     }
 
-    std::vector<std::shared_ptr<Kitchen>> currentKitchensSnapshot;
+    std::vector<Message::Status> allStatus;
+
     {
         std::lock_guard<std::mutex> lock(m_kitchenMutex);
-        currentKitchensSnapshot = m_kitchens;
+        for (const auto& kitchen : m_kitchens)
+        {
+            allStatus.push_back(kitchen->status);
+        }
     }
 
     for (const auto& pizza : orders)
     {
-        size_t totalProcessingPizzas = 0;
-        bool assignedToExistingKitchen = false;
-        std::shared_ptr<Kitchen> targetKitchen = nullptr;
+        bool needNewKitchen = true;
 
-        std::sort(currentKitchensSnapshot.begin(), currentKitchensSnapshot.end(),
-        [&](const auto& kitchen1, const auto& kitchen2)
+        std::sort(allStatus.begin(), allStatus.end(),
+        [&](const Message::Status& st1, const Message::Status& st2)
         {
-            if (kitchen1->status.idleCount != kitchen2->status.idleCount)
+            if (st1.idleCount != st2.idleCount)
             {
-                return (kitchen1->status.idleCount > kitchen2->status.idleCount);
+                return (st1.idleCount > st2.idleCount);
             }
-            if (kitchen1->status.pizzaCount != kitchen2->status.pizzaCount)
+
+            if (st1.pizzaCount != st2.pizzaCount)
             {
-                return (kitchen1->status.pizzaCount < kitchen2->status.pizzaCount);
+                return (st1.pizzaCount > st2.pizzaCount);
             }
-            return (kitchen1->GetID() < kitchen2->GetID());
+
+            return (st1.id < st2.id);
         });
 
-        if (currentKitchensSnapshot.empty())
+        for (auto& st : allStatus)
         {
-             assignedToExistingKitchen = false;
-        }
-        else
-        {
-            for (const auto& kitchen : currentKitchensSnapshot)
+            size_t total = m_cookCount - st.idleCount + st.pizzaCount;
+
+            if (total < static_cast<size_t>(1.7 * m_cookCount))
             {
-                totalProcessingPizzas = m_cookCount - kitchen->status.idleCount + kitchen->status.pizzaCount;
-                if (totalProcessingPizzas < static_cast<size_t>(1.7 * m_cookCount))
+                if (auto kitchen = GetKitchenByID(st.id))
                 {
-                    kitchen->pipe->SendMessage(Message::Order{
-                        kitchen->GetID(),
-                        pizza->Pack()
+                    std::lock_guard<std::mutex> lock(m_kitchenMutex);
+                    kitchen.value()->pipe->SendMessage(Message::Order{
+                        st.id, pizza->Pack()
                     });
-                    if (kitchen->status.idleCount > 0)
-                    {
-                        kitchen->status.idleCount--;
-                    }
-                    else
-                    {
-                        kitchen->status.pizzaCount++;
-                    }
-                    assignedToExistingKitchen = true;
-                    targetKitchen = kitchen;
-                    break;
                 }
-            }
-        }
 
-
-        if (!assignedToExistingKitchen)
-        {
-            CreateKitchen();
-
-            std::shared_ptr<Kitchen> newKitchen = nullptr;
-            {
-                std::lock_guard<std::mutex> lock(m_kitchenMutex);
-                if (!m_kitchens.empty())
+                if (st.idleCount > 0)
                 {
-                    newKitchen = m_kitchens.back();
-                }
-                currentKitchensSnapshot = m_kitchens;
-            }
-
-            if (newKitchen)
-            {
-                newKitchen->pipe->SendMessage(Message::Order{
-                    newKitchen->GetID(),
-                    pizza->Pack()
-                });
-                if (newKitchen->status.idleCount > 0)
-                {
-                    newKitchen->status.idleCount--;
+                    st.idleCount--;
                 }
                 else
                 {
-                    newKitchen->status.pizzaCount++;
+                    st.pizzaCount++;
                 }
-                targetKitchen = newKitchen;
+                needNewKitchen = false;
+                break;
+            }
+        }
+
+        if (needNewKitchen)
+        {
+            CreateKitchen();
+
+            {
+                std::lock_guard<std::mutex> lock(m_kitchenMutex);
+                allStatus.push_back(m_kitchens.back()->status);
+                m_kitchens.back()->pipe->SendMessage(Message::Order{
+                    m_kitchens.back()->GetID(), pizza->Pack()
+                });
+            }
+
+            if (allStatus.back().idleCount > 0)
+            {
+                allStatus.back().idleCount--;
             }
             else
             {
-                std::cerr << "Error: Failed to assign order, new kitchen could not be retrieved." << std::endl;
+                allStatus.back().pizzaCount++;
             }
         }
     }

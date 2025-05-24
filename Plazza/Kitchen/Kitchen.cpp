@@ -42,7 +42,23 @@ Kitchen::Kitchen(
 
 ///////////////////////////////////////////////////////////////////////////////
 Kitchen::~Kitchen()
-{}
+{
+    if (m_isRoutineRunning)
+    {
+        ForClosure();
+
+        auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (m_isRoutineRunning && std::chrono::steady_clock::now() < timeout)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+
+    if (IsRunning())
+    {
+        Wait();
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::RoutineInitialization(void)
@@ -167,7 +183,22 @@ void Kitchen::ForClosureCheck(void)
 void Kitchen::ForClosure(void)
 {
     m_isRoutineRunning = false;
+
+    for (auto& cook : m_cooks)
+    {
+        cook->running = false;
+    }
+
     m_pizzaQueueCV.NotifyAll();
+
+    for (auto& cook : m_cooks)
+    {
+        if (cook->Joinable())
+        {
+            cook->Join();
+        }
+    }
+
     m_cooks.clear();
 }
 

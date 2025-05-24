@@ -27,9 +27,15 @@ void Cook::Routine(void)
 {
     while (running)
     {
-        if (auto pizza =  m_kitchen.TryGetNextPizza(std::chrono::seconds(1)))
+        auto pizza =  m_kitchen.TryGetNextPizza(std::chrono::milliseconds(100));
+        if (pizza && running)
         {
             CookPizza(pizza.value());
+        }
+
+        if (!running)
+        {
+            break;
         }
 
         std::this_thread::yield();
@@ -39,13 +45,28 @@ void Cook::Routine(void)
 ///////////////////////////////////////////////////////////////////////////////
 bool Cook::CookPizza(uint16_t packedPizza)
 {
+    if (!running)
+    {
+        return (false);
+    }
+
     if (auto pizza = IPizza::Unpack(packedPizza))
     {
         auto ingredients = pizza.value()->GetIngredients();
 
-        if (!m_stock.WaitAndReserveIngredients(ingredients, std::chrono::seconds(2)))
+        if (!m_stock.WaitAndReserveIngredients(
+            ingredients, std::chrono::seconds(2)
+        ))
         {
-            m_kitchen.AddPizzaToQueue(packedPizza);
+            if (running)
+            {
+                m_kitchen.AddPizzaToQueue(packedPizza);
+            }
+            return (false);
+        }
+
+        if (!running)
+        {
             return (false);
         }
 
@@ -54,15 +75,17 @@ bool Cook::CookPizza(uint16_t packedPizza)
         m_cooking = true;
         std::this_thread::sleep_for(pizza.value()->GetCookingTime());
         m_cooking = false;
-        m_kitchen.NotifyPizzaCompletion(**pizza);
+
+        if (running)
+        {
+            m_kitchen.NotifyPizzaCompletion(*pizza.value());
+        }
 
         return (true);
     }
-    else
-    {
-        m_cooking = false;
-        return (false);
-    }
+
+    m_cooking = false;
+    return (false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
