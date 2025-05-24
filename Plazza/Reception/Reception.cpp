@@ -306,6 +306,15 @@ void Reception::WindowRoutine(void)
     }
 
     sf::Sprite sprite(background);
+    sf::Music music;
+
+    if (!music.openFromFile("Assets/Musics/Menu.ogg"))
+    {
+        return;
+    }
+
+    music.setLoop(true);
+    music.play();
 
     while (m_windowThread.running && !m_shutdown)
     {
@@ -319,6 +328,8 @@ void Reception::WindowRoutine(void)
         window.draw(sprite);
         window.display();
     }
+
+    music.stop();
 
     if (window.isOpen())
     {

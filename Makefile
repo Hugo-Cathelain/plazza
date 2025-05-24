@@ -22,7 +22,8 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CXX) -o $(TARGET) $(OBJECTS) $(FLAGS)
 
-bonus: LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system -DPLAZZA_BONUS
+bonus: LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+bonus: CXXFLAGS += -DPLAZZA_BONUS
 bonus: re
 
 tests: LDFLAGS += -lcriterion --coverage
