@@ -7,6 +7,7 @@
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Concurrency/Process.hpp"
+#include "Concurrency/CondVar.hpp"
 #include "Kitchen/Cook.hpp"
 #include "Kitchen/Stock.hpp"
 #include "Kitchen/ThreadPool.hpp"
@@ -45,27 +46,29 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds m_restockTime;        //<!
-    double m_multiplier;                            //<!
-    size_t m_cookCount;                             //<!
-    std::atomic<bool> m_running;                    //<!
-    std::atomic<int> m_activePizzaCount;            //<!
-    std::atomic<int> m_idleCookCount;               //<!
-    std::unique_ptr<Stock> m_stock;                 //<!
-    size_t m_id;                                    //<!
-    std::unique_ptr<Pipe> m_toReception;            //<!
-    std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
-    SteadyClock::TimePoint m_forclosureTime;        //<!
-    bool m_isRoutineRunning;                        //<!
-    std::queue<IPizza> m_pizzaQueue;                //<!
-    int64_t m_elapsedMs;                            //<!
+    std::chrono::milliseconds m_restockTime;            //<!
+    double m_multiplier;                                //<!
+    size_t m_cookCount;                                 //<!
+    std::atomic<bool> m_running;                        //<!
+    std::atomic<int> m_activePizzaCount;                //<!
+    std::atomic<int> m_idleCookCount;                   //<!
+    std::unique_ptr<Stock> m_stock;                     //<!
+    size_t m_id;                                        //<!
+    std::unique_ptr<Pipe> m_toReception;                //<!
+    std::vector<std::unique_ptr<Cook>> m_cooks;         //<!
+    SteadyClock::TimePoint m_forclosureTime;            //<!
+    bool m_isRoutineRunning;                            //<!
+    std::queue<uint16_t> m_pizzaQueue;                  //<!
+    std::mutex m_pizzaQueueMutex;                       //<!
+    CondVar m_pizzaQueueCV;                             //<!
+    int64_t m_elapsedMs;                                //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
     //
     ///////////////////////////////////////////////////////////////////////////
-    std::unique_ptr<Pipe> pipe;                 //<!
-    Message::Status status;                     //<!
+    std::unique_ptr<Pipe> pipe;                         //<!
+    Message::Status status;                             //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -144,6 +147,26 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     void RoutineInitialization(void);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param timeout
+    ///
+    /// \return
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    std::optional<uint16_t> TryGetNextPizza(
+        std::chrono::milliseconds timeout
+    );
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \param pizza
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    void AddPizzaToQueue(uint16_t pizza);
 };
 
 } // !namespace Plazza

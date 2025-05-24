@@ -83,11 +83,11 @@ void Kitchen::Routine(void)
                 SendStatus();
                 std::cout << "Kitchen " << m_id << " status sent" << std::endl;
             }
-            else if (message->Is<Message::Order>())
+            else if (const auto& order = message->GetIf<Message::Order>())
             {
-                const auto& order = message->GetIf<Message::Order>()->pizza;
                 std::cout << "pizza pizza: " << order << std::endl;
                 std::cout << "Kitchen " << m_id << " Order sent" << std::endl;
+                AddPizzaToQueue(order->pizza);
             }
         }
         ForClosureCheck();
@@ -96,6 +96,7 @@ void Kitchen::Routine(void)
     }
 
     std::cout << "Kitchen " << m_id << " is closing" << std::endl;
+    m_pizzaQueueCV.NotifyAll();
 }
 
 //TODO: getnextpizza()
@@ -162,9 +163,51 @@ void Kitchen::ForClosureCheck(void)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosure(void)
 {
-    m_toReception->SendMessage(Message::Closed{m_id});
-    m_cooks.clear();
     m_isRoutineRunning = false;
+    m_pizzaQueueCV.NotifyAll();
+    m_cooks.clear();
+    m_toReception->SendMessage(Message::Closed{m_id});
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::optional<uint16_t> Kitchen::TryGetNextPizza(
+    std::chrono::milliseconds timeout
+)
+{
+    std::unique_lock<std::mutex> lock(m_pizzaQueueMutex);
+
+    if (m_pizzaQueueCV.GetNativeHandle().wait_for(
+        lock,
+        timeout,
+        [this]
+        {
+            return (!m_pizzaQueue.empty() || !m_isRoutineRunning);
+        })
+    )
+    {
+    if (!m_pizzaQueue.empty())
+    {
+        uint16_t pizza = m_pizzaQueue.front();
+        m_pizzaQueue.pop();
+        return (pizza);
+    }
+    }
+    return (std::nullopt);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::AddPizzaToQueue(uint16_t pizza)
+{
+    if (!pizza)
+    {
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_pizzaQueueMutex);
+        m_pizzaQueue.push(pizza);
+    }
+    m_pizzaQueueCV.NotifyOne();
 }
 
 } // !namespace Plazza

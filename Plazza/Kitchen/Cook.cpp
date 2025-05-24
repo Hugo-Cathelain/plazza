@@ -4,6 +4,7 @@
 #include "Kitchen/Cook.hpp"
 #include "Kitchen/Kitchen.hpp"
 #include "Kitchen/Stock.hpp"
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Namespace Plazza
@@ -26,9 +27,9 @@ void Cook::Routine(void)
 {
     while (running)
     {
-        if (true) // Get next pizza with 1sec timeout
+        if (auto pizza =  m_kitchen.TryGetNextPizza(std::chrono::seconds(1)))
         {
-            // CookPizza();
+            CookPizza(pizza.value());
         }
 
         std::this_thread::yield();
@@ -36,23 +37,30 @@ void Cook::Routine(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-bool Cook::CookPizza(const IPizza& pizza)
+bool Cook::CookPizza(uint16_t packedPizza)
 {
-    auto ingredients = pizza.GetIngredients();
-
-    if (!m_stock.WaitAndReserveIngredients(ingredients, std::chrono::seconds(2)))
+    if (auto pizza = IPizza::Unpack(packedPizza))
     {
-        // Return pizza to queue if ingredients unavailable
-        // m_kitchen.ReturnPizza(pizza);
+        auto ingredients = pizza.value()->GetIngredients();
+
+        if (!m_stock.WaitAndReserveIngredients(ingredients, std::chrono::seconds(2)))
+        {
+            m_kitchen.AddPizzaToQueue(packedPizza);
+            return (false);
+        }
+
+        m_cooking = true;
+        std::this_thread::sleep_for(pizza.value()->GetCookingTime());
+        m_cooking = false;
+        m_kitchen.NotifyPizzaCompletion(**pizza);
+
+        return (true);
+    }
+    else
+    {
+        m_cooking = false;
         return (false);
     }
-
-    m_cooking = true;
-    std::this_thread::sleep_for(pizza.GetCookingTime());
-    m_cooking = false;
-    m_kitchen.NotifyPizzaCompletion(pizza);
-
-    return (true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

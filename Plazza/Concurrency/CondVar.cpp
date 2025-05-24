@@ -52,4 +52,10 @@ void CondVar::NotifyAll(void)
     m_cv.notify_all();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+std::condition_variable& CondVar::GetNativeHandle(void)
+{
+    return (m_cv);
+}
+
 } // !namespace Plazza

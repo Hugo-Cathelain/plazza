@@ -32,11 +32,6 @@ Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
 #ifdef PLAZZA_BONUS
     m_windowThread.Start();
 #endif
-    CreateKitchen();
-    CreateKitchen();
-    CreateKitchen();
-    CreateKitchen();
-    CreateKitchen();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
