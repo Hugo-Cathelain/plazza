@@ -74,19 +74,14 @@ void Kitchen::Routine(void)
 
     while (m_isRoutineRunning)
     {
-        // std::cout << "Kitchen " << m_id << " is running" << std::endl;
-
         while (const auto& message = pipe->PollMessage())
         {
             if (message->Is<Message::RequestStatus>())
             {
                 SendStatus();
-                std::cout << "Kitchen " << m_id << " status sent" << std::endl;
             }
             else if (const auto& order = message->GetIf<Message::Order>())
             {
-                std::cout << "pizza pizza: " << order << std::endl;
-                std::cout << "Kitchen " << m_id << " Order sent" << std::endl;
                 AddPizzaToQueue(order->pizza);
             }
         }
@@ -95,12 +90,8 @@ void Kitchen::Routine(void)
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }
 
-    std::cout << "Kitchen " << m_id << " is closing" << std::endl;
     m_pizzaQueueCV.NotifyAll();
 }
-
-//TODO: getnextpizza()
-//TODO: getnextpizza
 
 ///////////////////////////////////////////////////////////////////////////////
 size_t Kitchen::GetID(void) const

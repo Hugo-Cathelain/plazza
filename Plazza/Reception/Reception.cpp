@@ -54,9 +54,11 @@ void Reception::DisplayStatus(void)
     std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
     for (const auto& kitchen : m_kitchens)
     {
-        kitchen->pipe->SendMessage(Message::RequestStatus{});
-        // TODO: thing to do here
-        (void)kitchen;
+        Message::Status& st = kitchen->status;
+
+        std::cout << "\t" << st.id << ":" << std::endl;
+        std::cout << "\t\tIdling Cooks: " << st.idleCount << std::endl;
+        std::cout << "\t\tPizza in Queue: " << st.pizzaCount << std::endl;
     }
 }
 
@@ -97,6 +99,8 @@ void Reception::RemoveKitchen(size_t id)
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::ManagerThread(void)
 {
+    auto deadline = SteadyClock::Now() + SteadyClock::Milliseconds(250);
+
     while (m_manager.running && !m_shutdown)
     {
         while (const auto& message = m_pipe->PollMessage())
@@ -123,6 +127,15 @@ void Reception::ManagerThread(void)
             {
                 RemoveKitchen(closed->id);
             }
+        }
+
+        if (SteadyClock::Now() > deadline)
+        {
+            for (auto& kitchen : m_kitchens)
+            {
+                kitchen->pipe->SendMessage(Message::RequestStatus{});
+            }
+            deadline = SteadyClock::Now() + SteadyClock::Milliseconds(250);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
