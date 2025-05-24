@@ -146,7 +146,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         for (const auto& kitchen : m_kitchens) {
             totalProcessingPizzas = kitchen->status.pizzaCount;
             if (totalProcessingPizzas < static_cast<size_t>(1.7 * m_cookCount)) {
-                std::cout << "Sending order to kitchen " << kitchen->GetID() << std::endl;
                 kitchen->pipe->SendMessage(Message::Order{
                     kitchen->GetID(),
                     pizza->Pack()
@@ -157,7 +156,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         }
 
         if (needNewKitchen) {
-            std::cout << "Creating new kitchen\n";
             CreateKitchen();
             m_kitchens.back()->pipe->SendMessage(Message::Order{
                 m_kitchens.back()->GetID(),
