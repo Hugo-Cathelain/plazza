@@ -129,7 +129,13 @@ void Reception::ManagerThread(void)
             }
             else if (const auto& closed = message->GetIf<Message::Closed>())
             {
-                RemoveKitchen(closed->id);
+                if (auto kitchen = GetKitchenByID(closed->id))
+                {
+                    kitchen.value()->pipe->SendMessage(
+                        Message::Closed{closed->id}
+                    );
+                    RemoveKitchen(closed->id);
+                }
             }
         }
 

@@ -85,6 +85,10 @@ void Kitchen::Routine(void)
             {
                 AddPizzaToQueue(order->pizza);
             }
+            else if (message->Is<Message::Closed>())
+            {
+                ForClosure();
+            }
         }
         ForClosureCheck();
 
@@ -126,6 +130,11 @@ void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosureCheck(void)
 {
+    if (!m_isRoutineRunning)
+    {
+        return;
+    }
+
     m_idleCookCount = 0;
 
     for (const auto& cooks : m_cooks)
@@ -136,19 +145,20 @@ void Kitchen::ForClosureCheck(void)
         }
     }
 
-    if (static_cast<size_t>(m_idleCookCount.load()) != m_cookCount)
+    if (m_idleCookCount != static_cast<int>(m_cookCount))
     {
         m_forclosureTime = SteadyClock::Now();
         m_elapsedMs = 0;
     }
-    if (static_cast<size_t>(m_idleCookCount.load()) == m_cookCount)
+    else
     {
-    m_elapsedMs = SteadyClock::DurationToMs(
-        SteadyClock::Elapsed(m_forclosureTime, SteadyClock::Now()));
+        m_elapsedMs = SteadyClock::DurationToMs(
+            SteadyClock::Elapsed(m_forclosureTime, SteadyClock::Now())
+        );
 
         if (m_elapsedMs >= 5000)
         {
-            ForClosure();
+            m_toReception->SendMessage(Message::Closed{m_id});
         }
     }
 }
@@ -159,7 +169,6 @@ void Kitchen::ForClosure(void)
     m_isRoutineRunning = false;
     m_pizzaQueueCV.NotifyAll();
     m_cooks.clear();
-    m_toReception->SendMessage(Message::Closed{m_id});
 }
 
 ///////////////////////////////////////////////////////////////////////////////
