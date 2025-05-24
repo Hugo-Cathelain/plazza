@@ -133,7 +133,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         return;
 
     for (const auto& pizza : orders) {
-        // Count pizzas currently being processed in all kitchens
         size_t totalProcessingPizzas = 0;
 
         bool needNewKitchen = true;
@@ -150,8 +149,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         }
 
         if (needNewKitchen) {
-            std::cout << "No kitchen available for pizza: " << pizza->ToString() << std::endl;
-            // If no kitchen is available, we will create a new one
             CreateKitchen();
             m_kitchens.back()->pipe->SendMessage(Message::Order{
                 m_kitchens.back()->GetID(),
