@@ -23,9 +23,15 @@ Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
     ))
     , m_manager(std::bind(&Reception::ManagerThread, this))
     , m_shutdown(false)
+#ifdef PLAZZA_BONUS
+    , m_windowThread(std::bind(&Reception::WindowRoutine, this))
+#endif
 {
     m_pipe->Open();
     m_manager.Start();
+#ifdef PLAZZA_BONUS
+    m_windowThread.Start();
+#endif
     CreateKitchen();
 }
 
@@ -141,11 +147,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         availableKitchens.push_back(kitchen->GetID());
     }
 
-
-
-
-
-
     std::cout << "Available kitchens: ";
     for (const auto& kitchenId : availableKitchens) {
         std::cout << kitchenId << " \n";
@@ -169,7 +170,6 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         m_kitchens.back()->GetID(),
         orders[0]->Pack()
     });
-
 
     // Use the kitchen status to see the current capacity of each kitchen
     // in term of available cooks, or ingredients. Do not dispatch a pizza
@@ -291,6 +291,41 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
 //         }
 //     }
 // }
+
+#ifdef PLAZZA_BONUS
+///////////////////////////////////////////////////////////////////////////////
+void Reception::WindowRoutine(void)
+{
+    sf::RenderWindow window(sf::VideoMode(985, 515), "Reception");
+    sf::Event event;
+    sf::Texture background;
+
+    if (!background.loadFromFile("Assets/Images/Reception.png"))
+    {
+        return;
+    }
+
+    sf::Sprite sprite(background);
+
+    while (m_windowThread.running && !m_shutdown)
+    {
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {}
+        }
+
+        window.clear();
+        window.draw(sprite);
+        window.display();
+    }
+
+    if (window.isOpen())
+    {
+        window.close();
+    }
+}
+#endif
 
 
 } // !namespace Plazza
