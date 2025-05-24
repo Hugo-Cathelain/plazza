@@ -55,10 +55,15 @@ void Reception::DisplayStatus(void)
     std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
     for (const auto& kitchen : m_kitchens)
     {
-        std::cout << "\t" << kitchen->status.id << ":" << std::endl;
-        std::cout << "\t\tCooks: " << kitchen->status.idleCount << "/" << m_cookCount << std::endl;
-        std::cout << "\t\tPizza: " << kitchen->status.pizzaCount << "(" << (m_cookCount - kitchen->status.idleCount) + kitchen->status.pizzaCount << ")" << std::endl;
-        std::cout << "\t\tStock: " << kitchen->status.stock << std::endl;
+        const Message::Status& st = kitchen->status;
+
+        std::cout << "\t" << st.id << ":" << std::endl;
+        std::cout << "\t\tCooks: " << st.idleCount << "/" << m_cookCount
+                  << std::endl;
+        std::cout << "\t\tPizza: " << st.pizzaCount << "("
+                  << (m_cookCount - st.idleCount) + st.pizzaCount << ")"
+                  << std::endl;
+        std::cout << "\t\tStock: " << st.stock << std::endl;
     }
 }
 
