@@ -142,6 +142,26 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         size_t totalProcessingPizzas = 0;
 
         bool needNewKitchen = true;
+
+        std::sort(m_kitchens.begin(), m_kitchens.end(),
+            [](const auto& kitchen1, const auto& kitchen2) {
+                if (kitchen1->status.idleCount != kitchen2->status.idleCount) {
+                    return kitchen1->status.idleCount > kitchen2->status.idleCount;
+                }
+                if (kitchen1->status.pizzaCount != kitchen2->status.pizzaCount) {
+                    return kitchen1->status.pizzaCount < kitchen2->status.pizzaCount;
+                }
+                return kitchen1->GetID() < kitchen2->GetID();
+                // const auto& stock1 = Stock::Unpack(kitchen1->status.stock);
+                // const auto& stock2 = Stock::Unpack(kitchen2->status.stock);
+                // if (static_cast<size_t>(stock1[Ingredient::DOUGH]) !=
+                //     static_cast<size_t>(stock2[Ingredient::DOUGH])) {
+                //     return static_cast<size_t>(stock1[Ingredient::DOUGH]) <
+                //         static_cast<size_t>(stock2[Ingredient::DOUGH]);
+                // }
+            }
+        );
+
         for (const auto& kitchen : m_kitchens) {
             totalProcessingPizzas = kitchen->status.pizzaCount;
             if (totalProcessingPizzas < static_cast<size_t>(1.7 * m_cookCount)) {
