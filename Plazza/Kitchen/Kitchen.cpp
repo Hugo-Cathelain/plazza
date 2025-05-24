@@ -44,7 +44,7 @@ Kitchen::~Kitchen()
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
-void Kitchen::Routine(void)
+void Kitchen::RoutineInitialization(void)
 {
     m_stock = std::make_unique<Stock>(m_restockTime, *this);
     pipe = std::make_unique<Pipe>(
@@ -65,6 +65,12 @@ void Kitchen::Routine(void)
     {
         m_cooks.push_back(std::make_unique<Cook>(*this, *m_stock));
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void Kitchen::Routine(void)
+{
+    RoutineInitialization();
 
     while (m_isRoutineRunning)
     {
@@ -119,7 +125,7 @@ size_t Kitchen::GetID(void) const
 void Kitchen::SendStatus(void)
 {
     std::string pack = m_stock->Pack();
-    Message status = Message::Status{m_id, pack, m_elapsedMs, static_cast<size_t>(idleCookCount)};
+    Message status = Message::Status{m_id, pack, m_elapsedMs, static_cast<size_t>(m_idleCookCount)};
     m_toReception->SendMessage(status);
     // look up cv
 }
@@ -133,22 +139,22 @@ void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::ForClosureCheck(void)
 {
-    idleCookCount = 0;
+    m_idleCookCount = 0;
 
     for (const auto& cooks : m_cooks)
     {
         if (!cooks->IsCooking())
         {
-            idleCookCount++;
+            m_idleCookCount++;
         }
     }
 
-    if (static_cast<size_t>(idleCookCount.load()) != m_cookCount)
+    if (static_cast<size_t>(m_idleCookCount.load()) != m_cookCount)
     {
         m_forclosureTime = SteadyClock::Now();
         m_elapsedMs = 0;
     }
-    if (static_cast<size_t>(idleCookCount.load()) == m_cookCount)
+    if (static_cast<size_t>(m_idleCookCount.load()) == m_cookCount)
     {
     m_elapsedMs = SteadyClock::DurationToMs(
         SteadyClock::Elapsed(m_forclosureTime, SteadyClock::Now()));

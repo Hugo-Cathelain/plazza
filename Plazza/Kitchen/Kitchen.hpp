@@ -46,7 +46,7 @@ private:
     size_t m_cookCount;                             //<!
     std::atomic<bool> m_running;                    //<!
     std::atomic<int> m_activePizzaCount;            //<!
-    std::atomic<int> idleCookCount;                 //<!
+    std::atomic<int> m_idleCookCount;               //<!
     std::unique_ptr<Stock> m_stock;                 //<!
     size_t m_id;                                    //<!
     std::unique_ptr<Pipe> m_toReception;            //<!
@@ -132,6 +132,15 @@ public:
     ///
     ///////////////////////////////////////////////////////////////////////////
     void NotifyPizzaCompletion(const IPizza& pizza);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// \brief
+    ///
+    /// \return
+    ///
+    ///////////////////////////////////////////////////////////////////////////
+    void RoutineInitialization();
+
 };
 
 } // !namespace Plazza
