@@ -144,6 +144,7 @@ void Stock::Routine(void)
             pair.second++;
         }
         m_cv.NotifyAll();
+        m_kitchen.SendStatus();
     }
 }
 
