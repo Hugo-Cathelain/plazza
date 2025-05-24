@@ -56,6 +56,7 @@ public:
         std::string stock;
         int64_t timestamp;
         size_t idleCount;
+        size_t pizzaCount;
     };
 
     ///////////////////////////////////////////////////////////////////////////

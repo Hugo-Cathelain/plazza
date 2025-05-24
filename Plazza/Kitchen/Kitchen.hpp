@@ -53,7 +53,7 @@ private:
     std::vector<std::unique_ptr<Cook>> m_cooks;     //<!
     SteadyClock::TimePoint m_forclosureTime;        //<!
     bool m_isRoutineRunning;                        //<!
-    std::queue<IPizza> pizzaQueue;                  //<!
+    std::queue<IPizza> m_pizzaQueue;                //<!
     int64_t m_elapsedMs;                            //<!
 
 public:

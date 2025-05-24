@@ -115,7 +115,8 @@ void Kitchen::SendStatus(void)
         m_id,
         pack,
         m_elapsedMs,
-        static_cast<size_t>(m_idleCookCount)
+        static_cast<size_t>(m_idleCookCount),
+        m_pizzaQueue.size()
     };
 
     m_toReception->SendMessage(status);
