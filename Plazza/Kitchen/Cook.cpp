@@ -49,6 +49,8 @@ bool Cook::CookPizza(uint16_t packedPizza)
             return (false);
         }
 
+        m_kitchen.SendStatus();
+
         m_cooking = true;
         std::this_thread::sleep_for(pizza.value()->GetCookingTime());
         m_cooking = false;

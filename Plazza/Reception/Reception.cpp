@@ -49,16 +49,16 @@ Reception::~Reception()
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::DisplayStatus(void)
 {
+    std::lock_guard<std::mutex> lock(m_statusMutex);
     std::cout << "Pizzeria Status:" << std::endl;
 
     std::cout << "Kitchen(s): (" << m_kitchens.size() << ')' << std::endl;
     for (const auto& kitchen : m_kitchens)
     {
-        Message::Status& st = kitchen->status;
-
-        std::cout << "\t" << st.id << ":" << std::endl;
-        std::cout << "\t\tIdling Cooks: " << st.idleCount << std::endl;
-        std::cout << "\t\tPizza in Queue: " << st.pizzaCount << std::endl;
+        std::cout << "\t" << kitchen->status.id << ":" << std::endl;
+        std::cout << "\t\tCooks: " << kitchen->status.idleCount << "/" << m_cookCount << std::endl;
+        std::cout << "\t\tPizza: " << kitchen->status.pizzaCount << "(" << (m_cookCount - kitchen->status.idleCount) + kitchen->status.pizzaCount << ")" << std::endl;
+        std::cout << "\t\tStock: " << kitchen->status.stock << std::endl;
     }
 }
 
@@ -99,8 +99,6 @@ void Reception::RemoveKitchen(size_t id)
 ///////////////////////////////////////////////////////////////////////////////
 void Reception::ManagerThread(void)
 {
-    auto deadline = SteadyClock::Now() + SteadyClock::Milliseconds(250);
-
     while (m_manager.running && !m_shutdown)
     {
         while (const auto& message = m_pipe->PollMessage())
@@ -109,6 +107,7 @@ void Reception::ManagerThread(void)
             {
                 if (auto kitchen = GetKitchenByID(status->id))
                 {
+                    std::lock_guard<std::mutex> lock(m_statusMutex);
                     kitchen.value()->status = *status;
                 }
             }
@@ -127,15 +126,6 @@ void Reception::ManagerThread(void)
             {
                 RemoveKitchen(closed->id);
             }
-        }
-
-        if (SteadyClock::Now() > deadline)
-        {
-            for (auto& kitchen : m_kitchens)
-            {
-                kitchen->pipe->SendMessage(Message::RequestStatus{});
-            }
-            deadline = SteadyClock::Now() + SteadyClock::Milliseconds(250);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

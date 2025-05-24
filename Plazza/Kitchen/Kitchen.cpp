@@ -30,6 +30,7 @@ Kitchen::Kitchen(
     , m_forclosureTime(SteadyClock::Now())
     , m_isRoutineRunning(true)
     , m_elapsedMs(0)
+    , status{m_id, "5 5 5 5 5 5 5 5 5", 0, numberOfCooks, 0}
 {
     Start();
     pipe = std::make_unique<Pipe>(
@@ -87,7 +88,7 @@ void Kitchen::Routine(void)
         }
         ForClosureCheck();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     m_pizzaQueueCV.NotifyAll();
@@ -102,6 +103,7 @@ size_t Kitchen::GetID(void) const
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::SendStatus(void)
 {
+    std::unique_lock<std::mutex> lock(m_pizzaQueueMutex);
     std::string pack = m_stock->Pack();
     Message status = Message::Status{
         m_id,
@@ -112,12 +114,12 @@ void Kitchen::SendStatus(void)
     };
 
     m_toReception->SendMessage(status);
-    // look up cv
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
 {
+    SendStatus();
     m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
 }
 
@@ -193,6 +195,7 @@ void Kitchen::AddPizzaToQueue(uint16_t pizza)
         std::lock_guard<std::mutex> lock(m_pizzaQueueMutex);
         m_pizzaQueue.push(pizza);
     }
+    SendStatus();
     m_pizzaQueueCV.NotifyOne();
 }
 

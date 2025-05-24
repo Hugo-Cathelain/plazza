@@ -46,6 +46,7 @@ private:
     std::unique_ptr<Pipe> m_pipe;                       //<!
     Thread m_manager;                                   //<!
     std::atomic<bool> m_shutdown;                       //<!
+    std::mutex m_statusMutex;                           //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
