@@ -6,6 +6,7 @@
 #include "IPC/Message.hpp"
 #include "IPC/Pipe.hpp"
 #include "Pizza/APizza.hpp"
+#include "Utils/Logger.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -91,6 +92,11 @@ void Reception::CreateKitchen(void)
     m_kitchens.push_back(std::make_shared<Kitchen>(
         m_cookCount, 1.0, m_restockTime
     ));
+
+    Logger::Info(
+        "KITCHEN",
+        "New kitchen created: " + std::to_string(m_kitchens.back()->GetID())
+    );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -102,6 +108,10 @@ void Reception::RemoveKitchen(size_t id)
             return (kitchen->GetID() == id);
         }),
         m_kitchens.end()
+    );
+    Logger::Info(
+        "KITCHEN",
+        "Kitchen closed: " + std::to_string(id)
     );
 }
 
@@ -133,7 +143,10 @@ void Reception::ManagerThread(void)
 
                     msg = (msg[0] == 'E' ? "An " : "A ") + msg + " is ready!";
 
-                    std::cout << msg << std::endl;
+                    Logger::Info(
+                        "RECEPTION",
+                        msg + " Cooked by " + std::to_string(cooked->id)
+                    );
                 }
             }
             else if (const auto& closed = message->GetIf<Message::Closed>())
@@ -226,6 +239,10 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
                     st.pizzaCount++;
                 }
                 needNewKitchen = false;
+                Logger::Debug(
+                    "RECEPTION",
+                    "Pizza dispatch to " + std::to_string(st.id)
+                );
                 break;
             }
         }
@@ -250,6 +267,11 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
             {
                 allStatus.back().pizzaCount++;
             }
+
+            Logger::Debug(
+                "RECEPTION",
+                "Pizza dispatch to " + std::to_string(allStatus.back().id)
+            );
         }
     }
 }

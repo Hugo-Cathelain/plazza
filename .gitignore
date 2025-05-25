@@ -6,3 +6,4 @@ plazza
 unit_tests
 *.gcda
 *.gcno
+*.log

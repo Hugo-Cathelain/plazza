@@ -4,6 +4,7 @@
 #include "Reception/CLI.hpp"
 #include "Reception/Parser.hpp"
 #include "Errors/ParsingException.hpp"
+#include "Utils/Logger.hpp"
 #include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,6 +51,8 @@ void CLI::Run(void)
         {
             continue;
         }
+
+        Logger::Debug("CLI", "Command entered: '" + command + "'");
 
         if (command == "exit")
         {

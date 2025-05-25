@@ -73,8 +73,6 @@ void Kitchen::RoutineInitialization(void)
         Pipe::OpenMode::WRITE_ONLY
     );
 
-    std::cout << "Kitchen " << m_id << " is started" << std::endl;
-
     pipe->Open();
     m_toReception->Open();
 

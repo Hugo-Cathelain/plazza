@@ -4,6 +4,7 @@
 #include "Core.hpp"
 #include "Errors/InvalidArgument.hpp"
 #include "Pizza/APizza.hpp"
+#include "Utils/Logger.hpp"
 #include "Utils/Timer.hpp"
 #include <iostream>
 #include <algorithm>
@@ -19,6 +20,11 @@ Core::Core(int argc, char* argv[])
     : m_initialized(false)
 {
     ParseArguments(argc, argv);
+
+    Logger::SetConsoleOutput(false);
+    Logger::SetLogFile("plazza.log");
+
+    Logger::Info("CORE", "Beginning of Plazza");
 
     Plazza::APizza::SetCookingTimeMultiplier(m_cookingTimeMultiplier);
 
