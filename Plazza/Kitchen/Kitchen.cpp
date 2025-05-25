@@ -47,10 +47,10 @@ Kitchen::~Kitchen()
     {
         ForClosure();
 
-        auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-        while (m_isRoutineRunning && std::chrono::steady_clock::now() < timeout)
+        auto timeout = SteadyClock::Now() + Seconds(5);
+        while (m_isRoutineRunning && SteadyClock::Now() < timeout)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(Milliseconds(10));
         }
     }
 
@@ -108,7 +108,7 @@ void Kitchen::Routine(void)
         }
         ForClosureCheck();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(Milliseconds(10));
     }
 
     m_pizzaQueueCV.NotifyAll();
@@ -203,9 +203,7 @@ void Kitchen::ForClosure(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::optional<uint16_t> Kitchen::TryGetNextPizza(
-    std::chrono::milliseconds timeout
-)
+std::optional<uint16_t> Kitchen::TryGetNextPizza(Milliseconds timeout)
 {
     std::unique_lock<std::mutex> lock(m_pizzaQueueMutex);
 

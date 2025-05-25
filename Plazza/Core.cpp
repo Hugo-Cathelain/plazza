@@ -4,6 +4,7 @@
 #include "Core.hpp"
 #include "Errors/InvalidArgument.hpp"
 #include "Pizza/APizza.hpp"
+#include "Utils/Timer.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -22,7 +23,7 @@ Core::Core(int argc, char* argv[])
     Plazza::APizza::SetCookingTimeMultiplier(m_cookingTimeMultiplier);
 
     m_reception = std::make_unique<Reception>(
-        std::chrono::milliseconds(m_restockTimeMs),
+        Milliseconds(m_restockTimeMs),
         m_cooksPerKitchen
     );
 

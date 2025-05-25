@@ -14,7 +14,7 @@ namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-Reception::Reception(std::chrono::milliseconds restockTime, size_t CookCount)
+Reception::Reception(Milliseconds restockTime, size_t CookCount)
     : m_restockTime(restockTime)
     , m_cookCount(CookCount)
     , m_pipe(std::make_unique<Pipe>(
@@ -148,7 +148,7 @@ void Reception::ManagerThread(void)
             }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(Milliseconds(10));
     }
 }
 

@@ -9,6 +9,7 @@
 #include "Pizza/Ingredients.hpp"
 #include "Concurrency/Thread.hpp"
 #include "Concurrency/CondVar.hpp"
+#include "Utils/Timer.hpp"
 #include <chrono>
 #include <map>
 #include <mutex>
@@ -34,11 +35,11 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds m_restockTime;    //<!
-    std::map<Ingredient, int> m_stock;          //<!
-    Kitchen& m_kitchen;                         //<!
-    Mutex m_mutex;                              //<!
-    CondVar m_cv;                               //<!
+    Milliseconds m_restockTime;         //<!
+    std::map<Ingredient, int> m_stock;  //<!
+    Kitchen& m_kitchen;                 //<!
+    Mutex m_mutex;                      //<!
+    CondVar m_cv;                       //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -47,7 +48,7 @@ public:
     /// \param restockTime
     ///
     ///////////////////////////////////////////////////////////////////////////
-    Stock(std::chrono::milliseconds restockTime, Kitchen& kitchen);
+    Stock(Milliseconds restockTime, Kitchen& kitchen);
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief
@@ -88,7 +89,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     bool WaitAndReserveIngredients(
         const std::vector<Ingredient>& ingredients,
-        std::chrono::milliseconds timeout
+        Milliseconds timeout
     );
 
     ///////////////////////////////////////////////////////////////////////////

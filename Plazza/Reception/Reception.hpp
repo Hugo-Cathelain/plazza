@@ -41,7 +41,7 @@ private:
     //
     ///////////////////////////////////////////////////////////////////////////
     std::vector<std::shared_ptr<Kitchen>> m_kitchens;   //<!
-    std::chrono::milliseconds m_restockTime;            //<!
+    Milliseconds m_restockTime;                         //<!
     size_t m_cookCount;                                 //<!
     std::unique_ptr<Pipe> m_pipe;                       //<!
     Thread m_manager;                                   //<!
@@ -56,7 +56,7 @@ public:
     /// \param cookCount
     ///
     ///////////////////////////////////////////////////////////////////////////
-    Reception(std::chrono::milliseconds restockTime, size_t cookCount);
+    Reception(Milliseconds restockTime, size_t cookCount);
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

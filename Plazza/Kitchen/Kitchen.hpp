@@ -47,7 +47,7 @@ private:
     ///////////////////////////////////////////////////////////////////////////
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::chrono::milliseconds m_restockTime;            //<!
+    Milliseconds m_restockTime;                         //<!
     double m_multiplier;                                //<!
     size_t m_cookCount;                                 //<!
     std::atomic<bool> m_running;                        //<!
@@ -57,7 +57,7 @@ private:
     size_t m_id;                                        //<!
     std::unique_ptr<Pipe> m_toReception;                //<!
     std::vector<std::unique_ptr<Cook>> m_cooks;         //<!
-    SteadyClock::TimePoint m_forclosureTime;            //<!
+    TimePoint m_forclosureTime;                         //<!
     bool m_isRoutineRunning;                            //<!
     std::queue<uint16_t> m_pizzaQueue;                  //<!
     Mutex m_pizzaQueueMutex;                            //<!
@@ -83,7 +83,7 @@ public:
     Kitchen(
         size_t numberOfCooks = 1,
         double multiplier = 1.0,
-        std::chrono::milliseconds restockTime = std::chrono::milliseconds(1000)
+        Milliseconds restockTime = Milliseconds(1000)
     );
 
     ///////////////////////////////////////////////////////////////////////////
@@ -157,9 +157,7 @@ public:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    std::optional<uint16_t> TryGetNextPizza(
-        std::chrono::milliseconds timeout
-    );
+    std::optional<uint16_t> TryGetNextPizza(Milliseconds timeout);
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

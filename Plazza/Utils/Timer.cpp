@@ -16,16 +16,13 @@ SteadyClock::SteadyClock() {}
 SteadyClock::~SteadyClock() {}
 
 ///////////////////////////////////////////////////////////////////////////////
-SteadyClock::TimePoint SteadyClock::Now(void)
+TimePoint SteadyClock::Now(void)
 {
     return (std::chrono::steady_clock::now());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-SteadyClock::Duration SteadyClock::Elapsed(
-    SteadyClock::TimePoint start,
-    SteadyClock::TimePoint current
-)
+Duration SteadyClock::Elapsed(TimePoint start,TimePoint current)
 {
     return ((current - start));
 }
@@ -33,7 +30,7 @@ SteadyClock::Duration SteadyClock::Elapsed(
 ///////////////////////////////////////////////////////////////////////////////
 int64_t SteadyClock::DurationToMs(Duration duration)
 {
-    auto milliseconds = std::chrono::duration_cast<SteadyClock::Milliseconds>(duration).count();
+    auto milliseconds = std::chrono::duration_cast<Milliseconds>(duration).count();
     return (milliseconds);
 }
 

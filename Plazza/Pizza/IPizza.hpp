@@ -7,6 +7,7 @@
 // Dependencies
 ///////////////////////////////////////////////////////////////////////////////
 #include "Pizza/Ingredients.hpp"
+#include "Utils/Timer.hpp"
 #include <string>
 #include <optional>
 #include <memory>
@@ -88,7 +89,7 @@ public:
     /// \return
     ///
     ///////////////////////////////////////////////////////////////////////////
-    virtual std::chrono::milliseconds GetCookingTime(void) const = 0;
+    virtual Milliseconds GetCookingTime(void) const = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief

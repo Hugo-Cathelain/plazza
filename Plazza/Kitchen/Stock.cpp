@@ -14,7 +14,7 @@ namespace Plazza
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-Stock::Stock(std::chrono::milliseconds restockTime, Kitchen& kitchen)
+Stock::Stock(Milliseconds restockTime, Kitchen& kitchen)
     : Thread(std::bind(&Stock::Routine, this))
     , m_restockTime(restockTime)
     , m_kitchen(kitchen)
@@ -97,14 +97,14 @@ bool Stock::TryReserveIngredients(const std::vector<Ingredient>& ingredients)
 ///////////////////////////////////////////////////////////////////////////////
 bool Stock::WaitAndReserveIngredients(
     const std::vector<Ingredient>& ingredients,
-    std::chrono::milliseconds timeout
+    Milliseconds timeout
 )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    auto deadline = std::chrono::steady_clock::now() + timeout;
+    auto deadline = SteadyClock::Now() + timeout;
 
-    while (std::chrono::steady_clock::now() < deadline)
+    while (SteadyClock::Now() < deadline)
     {
         bool canReserve = true;
         for (auto ingredient : ingredients)
@@ -125,7 +125,7 @@ bool Stock::WaitAndReserveIngredients(
             return (true);
         }
 
-        m_cv.WaitFor(lock, std::chrono::milliseconds(100));
+        m_cv.WaitFor(lock, Milliseconds(100));
     }
 
     return (false);

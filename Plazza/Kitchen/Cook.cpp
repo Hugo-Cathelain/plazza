@@ -27,7 +27,7 @@ void Cook::Routine(void)
 {
     while (running)
     {
-        auto pizza =  m_kitchen.TryGetNextPizza(std::chrono::milliseconds(100));
+        auto pizza =  m_kitchen.TryGetNextPizza(Milliseconds(100));
         if (pizza && running)
         {
             CookPizza(pizza.value());
@@ -54,9 +54,7 @@ bool Cook::CookPizza(uint16_t packedPizza)
     {
         auto ingredients = pizza.value()->GetIngredients();
 
-        if (!m_stock.WaitAndReserveIngredients(
-            ingredients, std::chrono::seconds(2)
-        ))
+        if (!m_stock.WaitAndReserveIngredients(ingredients, Seconds(2)))
         {
             if (running)
             {
