@@ -30,7 +30,8 @@ Kitchen::Kitchen(
     , m_forclosureTime(SteadyClock::Now())
     , m_isRoutineRunning(true)
     , m_elapsedMs(0)
-    , status{m_id, "5 5 5 5 5 5 5 5 5", 0, numberOfCooks, 0}
+    , m_pizzaTime(0)
+    , status{m_id, "5 5 5 5 5 5 5 5 5", 0, numberOfCooks, 0, 0}
 {
     Start();
     pipe = std::make_unique<Pipe>(
@@ -128,7 +129,8 @@ void Kitchen::SendStatus(void)
         pack,
         m_elapsedMs,
         static_cast<size_t>(m_idleCookCount),
-        m_pizzaQueue.size()
+        m_pizzaQueue.size(),
+        m_pizzaTime
     };
 
     m_toReception->SendMessage(status);
@@ -137,6 +139,7 @@ void Kitchen::SendStatus(void)
 ///////////////////////////////////////////////////////////////////////////////
 void Kitchen::NotifyPizzaCompletion(const IPizza& pizza)
 {
+    m_pizzaTime -= pizza.GetCookingTime().count();
     SendStatus();
     m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
 }
@@ -225,11 +228,16 @@ std::optional<uint16_t> Kitchen::TryGetNextPizza(Milliseconds timeout)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Kitchen::AddPizzaToQueue(uint16_t pizza)
+void Kitchen::AddPizzaToQueue(uint16_t packedPizza)
 {
     {
         std::lock_guard<std::mutex> lock(m_pizzaQueueMutex);
-        m_pizzaQueue.push(pizza);
+        m_pizzaQueue.push(packedPizza);
+    }
+
+    if (auto pizza = IPizza::Unpack(packedPizza))
+    {
+        m_pizzaTime += static_cast<int64_t>(pizza.value()->GetCookingTime().count());
     }
     SendStatus();
     m_pizzaQueueCV.NotifyOne();

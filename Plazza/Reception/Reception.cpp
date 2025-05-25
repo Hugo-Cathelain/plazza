@@ -66,6 +66,8 @@ void Reception::DisplayStatus(void)
                   << std::endl;
         std::cout << "\t\tStock: " << st.stock << std::endl;
         std::cout << "\t\tClosure Time: " << st.timestamp << std::endl;
+        std::cout << "\t\tPizza Completion Time : " << st.pizzaTime << std::endl;
+
     }
 }
 

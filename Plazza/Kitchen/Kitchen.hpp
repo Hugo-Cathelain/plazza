@@ -63,6 +63,7 @@ private:
     Mutex m_pizzaQueueMutex;                            //<!
     CondVar m_pizzaQueueCV;                             //<!
     int64_t m_elapsedMs;                                //<!
+    int64_t m_pizzaTime;                                //<!
 
 public:
     ///////////////////////////////////////////////////////////////////////////
