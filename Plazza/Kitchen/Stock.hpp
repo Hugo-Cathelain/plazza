@@ -37,7 +37,7 @@ private:
     std::chrono::milliseconds m_restockTime;    //<!
     std::map<Ingredient, int> m_stock;          //<!
     Kitchen& m_kitchen;                         //<!
-    std::mutex m_mutex;                         //<!
+    Mutex m_mutex;                              //<!
     CondVar m_cv;                               //<!
 
 public:

@@ -8,16 +8,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "Concurrency/Process.hpp"
 #include "Concurrency/CondVar.hpp"
+#include "Concurrency/Mutex.hpp"
 #include "Kitchen/Cook.hpp"
 #include "Kitchen/Stock.hpp"
 #include "Kitchen/ThreadPool.hpp"
 #include "Utils/Timer.hpp"
 #include "IPC/Pipe.hpp"
+#include "Pizza/IPizza.hpp"
 #include <vector>
 #include <memory>
 #include <atomic>
 #include <queue>
-#include <Pizza/IPizza.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -59,7 +60,7 @@ private:
     SteadyClock::TimePoint m_forclosureTime;            //<!
     bool m_isRoutineRunning;                            //<!
     std::queue<uint16_t> m_pizzaQueue;                  //<!
-    std::mutex m_pizzaQueueMutex;                       //<!
+    Mutex m_pizzaQueueMutex;                            //<!
     CondVar m_pizzaQueueCV;                             //<!
     int64_t m_elapsedMs;                                //<!
 
