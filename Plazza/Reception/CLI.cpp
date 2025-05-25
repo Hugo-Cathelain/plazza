@@ -84,6 +84,7 @@ void CLI::ProcessCommand(const std::string& line)
         }
         catch (const ParsingException& e)
         {
+            Logger::Error("CLI", e.what());
             std::cerr << e.what() << std::endl;
         }
     }
