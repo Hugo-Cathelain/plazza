@@ -57,6 +57,7 @@ public:
         int64_t timestamp;
         size_t idleCount;
         size_t pizzaCount;
+        int64_t pizzaTime;
     };
 
     ///////////////////////////////////////////////////////////////////////////

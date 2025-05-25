@@ -94,7 +94,8 @@ std::optional<Message> Message::Unpack(const std::vector<char>& buffer)
             ReadFromBuffer(current, payload_actual_end, data.stock) &&
             ReadFromBuffer(current, payload_actual_end, data.timestamp) &&
             ReadFromBuffer(current, payload_actual_end, data.idleCount) &&
-            ReadFromBuffer(current, payload_actual_end, data.pizzaCount)
+            ReadFromBuffer(current, payload_actual_end, data.pizzaCount) &&
+            ReadFromBuffer(current, payload_actual_end, data.pizzaTime)
         )
         {
             result = Message(data);
@@ -154,6 +155,7 @@ std::vector<char> Message::Pack(void) const
             AppendToBuffer(payload_buffer, data.timestamp);
             AppendToBuffer(payload_buffer, data.idleCount);
             AppendToBuffer(payload_buffer, data.pizzaCount);
+            AppendToBuffer(payload_buffer, data.pizzaTime);
         }
         else if constexpr (std::is_same_v<T, Message::RequestStatus>)
         {
