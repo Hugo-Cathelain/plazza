@@ -67,7 +67,6 @@ void Reception::DisplayStatus(void)
         std::cout << "\t\tStock: " << st.stock << std::endl;
         std::cout << "\t\tClosure Time: " << st.timestamp << std::endl;
         std::cout << "\t\tPizza Completion Time : " << st.pizzaTime << std::endl;
-
     }
 }
 
@@ -213,6 +212,11 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
             if (st1.pizzaCount != st2.pizzaCount)
             {
                 return (st1.pizzaCount > st2.pizzaCount);
+            }
+
+            if (st1.pizzaTime != st2.pizzaTime)
+            {
+                return (st1.pizzaTime < st2.pizzaTime);
             }
 
             return (st1.id < st2.id);
