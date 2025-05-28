@@ -226,7 +226,7 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
         {
             size_t total = m_cookCount - st.idleCount + st.pizzaCount;
 
-            if (total < static_cast<size_t>(1.7 * m_cookCount))
+            if (total < static_cast<size_t>(2.0 * m_cookCount))
             {
                 if (auto kitchen = GetKitchenByID(st.id))
                 {
