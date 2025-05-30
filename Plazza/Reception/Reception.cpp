@@ -291,6 +291,11 @@ void Reception::WindowRoutine(void)
     const float WINDOW_WIDTH = 985.f;
     const float SCROLL_SPEED = 30.f;
     const float SCREEN_MARGIN = 200.f;
+    const float COOK_WIDTH = 80.f;
+    const float COOK_HEIGHT = 100.f;
+    const float COOK_START_X = 200.f;
+    const float COOK_START_Y = 150.f;
+    const float COOK_SPACING = 120.f;
 
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     const float screenApiHeight = static_cast<float>(desktop.height);
@@ -324,6 +329,8 @@ void Reception::WindowRoutine(void)
     sf::Event event;
     sf::Texture backgroundTexture;
     sf::Texture kitchensTexture;
+    sf::Texture cookTexture;
+    sf::Font font;
 
     if (!kitchensTexture.loadFromFile("Assets/Images/Kitchens.png"))
     {
@@ -335,8 +342,19 @@ void Reception::WindowRoutine(void)
         return;
     }
 
+    // if (!cookTexture.loadFromFile("Assets/Images/Cook.png"))
+    // {
+    //     return;
+    // }
+
+    // if (!font.loadFromFile("Assets/Fonts/Font.ttf"))
+    // {
+    //     return;
+    // }
+
     sf::Sprite kitchenSprite(kitchensTexture);
     sf::Sprite backgroundSprite(backgroundTexture);
+    // sf::Sprite cookSprite(cookTexture);
     sf::Music music;
     if (!music.openFromFile("Assets/Musics/Game.ogg"))
     {
@@ -454,6 +472,26 @@ void Reception::WindowRoutine(void)
                     static_cast<int>(KITCHEN_HEIGHT))
             ));
             window.draw(kitchenSprite);
+
+            size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
+            const Message::Status& status = kitchensToDraw[i]->status;
+            size_t idleCooks = status.idleCount;
+            size_t busyCooks = totalCooks - idleCooks;
+
+            // for (size_t c = 0; c < totalCooks; c++) {
+            //     cookSprite.setPosition(COOK_START_X + c * COOK_SPACING, kitchenY + COOK_START_Y);
+
+            //     // Change appearance based on idle/busy status
+            //     if (c < busyCooks) {
+            //         // Busy cook (working)
+            //         cookSprite.setColor(sf::Color(255, 255, 255)); // Normal color
+            //     } else {
+            //         // Idle cook
+            //         cookSprite.setColor(sf::Color(150, 150, 255)); // Bluish tint
+            //     }
+
+            //     window.draw(cookSprite);
+            // }
         }
         window.display();
     }
@@ -462,3 +500,29 @@ void Reception::WindowRoutine(void)
 #endif
 
 } // !namespace Plazza
+
+
+            // // Draw cooks in this kitchen
+            // size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
+            // const Message::Status& status = kitchensToDraw[i]->status;
+            // size_t idleCooks = status.idleCount;
+            // size_t busyCooks = totalCooks - idleCooks;
+
+            // // Draw status text
+            // sf::Text kitchenStatus;
+            // kitchenStatus.setFont(font);
+            // kitchenStatus.setCharacterSize(18);
+            // kitchenStatus.setFillColor(sf::Color::White);
+
+            // std::string statusText = "Kitchen #" + std::to_string(kitchensToDraw[i]->GetID()) +
+            //                          "\nCooks: " + std::to_string(idleCooks) + "/" + std::to_string(totalCooks) +
+            //                          "\nPizza Queue: " + std::to_string(status.pizzaCount) +
+            //                          "\nStock: " + std::to_string(status.stock);
+
+            // if (idleCooks == totalCooks) {
+            //     statusText += "\nIdle Time: " + std::to_string(status.timestamp) + "ms";
+            // }
+
+            // kitchenStatus.setString(statusText);
+            // kitchenStatus.setPosition(20.f, kitchenY + 20.f);
+            // window.draw(kitchenStatus);
