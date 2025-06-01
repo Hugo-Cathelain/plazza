@@ -7,7 +7,7 @@ implements a `concurrent architecture` where a `Reception` handles incoming orde
 
 This project is compiled via `Makefile` with two build options:
 - `make` or `make re`: Standard compilation for the base simulation
-- `make bonus`: Enables additional features through conditional compilation (PLAZZA_BONUS flag), activating a graphical visualization of the pizzeria
+- `make bonus`: Enables additional features through conditional compilation *PLAZZA_BONUS flag*, activating a graphical visualization of the pizzeria
 
 # Basic Usage
 
@@ -32,7 +32,11 @@ The test suite first verifies the PizzaFactory functionality and available comma
 
 <bre>
 
-Our testing methodology extends beyond just Unit tests. Along with, we have developed a `hierarchy` of `error classes`, with the top-level class inheriting from `std::exception`. The classes `InvalidArgument` and `ParsingException` are derived from the `Exception` class.
+Our testing methodology extends beyond just Unit tests. Along with, we have developed a `hierarchy` of `error classes`, with the top-level class inheriting from `std::exception`: `Exception`. The classes `InvalidArgument` and `ParsingException` are derived from this `Exception` class.
+
+<bre>
+
+All of the `CLI` output are directed into our log file `plazza.log` to not clutter the CLI during simulation, whilst simultaneously acquiring substanital information useful for debugging and testing.
 
 # Architecture
 
@@ -173,6 +177,25 @@ As afermentioned above. `Reception` periodically sends `RequestStatus` messages 
 <br><br>
 It firsts checks to see how many `cooks` are `idle` *not working*. If they are identical it check pizza amount found in the kitchen. If still identical it checks their pizzaTime, the Time left to individually cook each pizza found in their queue. Finally if they are truly identical, they are simply sorted by id number.
 
-# bonus Feature
+# Bonus Feature
 
-This projects contains additional features not required by the cirriculum. notably the creation of a window to visualize the cooking process
+This projects contains additional features not required by the cirriculum, notably the creation of a `window` to fully visualize the `pizzeria experience`.
+
+using the compiling method explained above. One simply needs to build with `make bonus` and execute the binary normally.
+
+this will compile the base code with the conditional flag: **PLAZZA_BONUS** opening up access to new features.
+
+1. ***Window Pop Up***: The first as mentioned is the creation of a `window` with the `reception` in full view
+2. ***Sound Integration***: You should also hear the wonderful pizzeria music in the background thanks to our music and `sound intergration`.
+3. ***Kitchen Stacking Protocol***: By giving your pizza order in the CLI you will see all the `kitchens` stack ontop of the `reception`. they will appear and dissapear when in and out of use.
+4. ***Kitchen Info***: in the `kitchen` you can identify the amount of `chefs`, `pizza` amount as well as the `kitchen` Timer. counting down to its <span style="color: red;">death</span>.
+
+
+<br>
+<br>
+<br>
+
+# ***CREDIT***
+***Mallory Scotton*** <br>
+***Nathan Fievet*** <br>
+***Hugo Cathelain*** <br>
