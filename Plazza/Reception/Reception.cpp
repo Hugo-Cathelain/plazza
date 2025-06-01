@@ -291,11 +291,11 @@ void Reception::WindowRoutine(void)
     const float WINDOW_WIDTH = 985.f;
     const float SCROLL_SPEED = 30.f;
     const float SCREEN_MARGIN = 200.f;
-    const float COOK_WIDTH = 80.f;
-    const float COOK_HEIGHT = 100.f;
-    const float COOK_START_X = 200.f;
-    const float COOK_START_Y = 150.f;
-    const float COOK_SPACING = 120.f;
+    // const float COOK_WIDTH = 80.f;
+    // const float COOK_HEIGHT = 100.f;
+    // const float COOK_START_X = 200.f;
+    // const float COOK_START_Y = 150.f;
+    // const float COOK_SPACING = 120.f;
 
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     const float screenApiHeight = static_cast<float>(desktop.height);
@@ -483,9 +483,9 @@ void Reception::WindowRoutine(void)
             window.draw(kitchenSprite);
 
             size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
-            const Message::Status& status = KitchenStatuses[i];
+            const Message::Status& status = kitchenStatuses[i];
             size_t idleCooks = status.idleCount;
-            size_t busyCooks = totalCooks - idleCooks;
+            // size_t busyCooks = totalCooks - idleCooks;
 
             // std::string statusText = "Kitchen #" + std::to_string(kitchensToDraw[i]->GetID()) +
             //                          "\nCooks: " + std::to_string(idleCooks) + "/" + std::to_string(totalCooks) +
