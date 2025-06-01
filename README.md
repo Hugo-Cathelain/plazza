@@ -20,7 +20,7 @@ with 3 flags for the `cooking speed multiplier`, the amount of `cooks per kitche
 
 # Testing
 
-In addition to the two make options for program execution, we provide a third one for `unit tests`. This can be compiled with: `make tests_run`
+In addition to the two make options for program execution, we provide a third option for `unit tests`. This can be compiled with: `make tests_run`
 
 This option runs 40 comprehensive tests across our codebase, focusing on:
 
@@ -29,6 +29,10 @@ This option runs 40 comprehensive tests across our codebase, focusing on:
 3. **Singleton**: Tests our implementation of the Singleton design pattern
 
 The test suite first verifies the PizzaFactory functionality and available commands, then validates our Singleton implementation by creating a `mock class`.
+
+<bre>
+
+Our testing methodology extends beyond just Unit tests. Along with, we have developed a `hierarchy` of `error classes`, with the top-level class inheriting from `std::exception`. The classes `InvalidArgument` and `ParsingException` are derived from the `Exception` class.
 
 # Architecture
 
@@ -109,6 +113,66 @@ this project ecapsluates multiplpe encapsulation of methods and variable, creati
 
 ## Dialogue Logic
 
+our dialogue logic can be divvied up into 3 major parts:
+
+1. **Cooks and Kitchen Manager**
+    - <u>Order Submission</u> :
+    When a customer places an order at the `Reception`, it `serializes` the `order` into a Message and sends it to the appropriate `Kitchen` via `named pipes`:
+
+        ```cpp
+        pipe->SendMessage(Message::Order{st.id, pizza->Pack()});
+        ```
+        - *in this case, reception serializes the order, containing the kitchen id as well as the pizza order*
+    - <u> Status Queries </u> :
+    Reception periodically sends `RequestStatus` messages to all `Kitchens` to monitor their workload, ingredient levels, and idle time.
+
+        ```cpp
+        message->GetIf<Message::Status>()
+        ```
+        - *this is then used to calculate the load balance to allow efficient pizza distribution between each kitchen*
+
+2. **Kitchen Internal Communication**
+    - <u> Cooks and Kitchen Manager</u>:
+    Each `Kitchen` manages their `cooks` via a `thread pool` represented by a
+
+        ```cpp
+        std::vector<std::unique_ptr<Cook>> m_cooks;
+        ```
+
+    - <u> Order Queue </u>:
+    `Orders` received from `Reception` are placed in a `thread-safe queue`, protected by `mutexes`:
+
+        ```cpp
+        std::queue<uint16_t> m_pizzaQueue;
+        Mutex m_pizzaQueueMutex;
+        ```
+    - <u> Cook Notification </u>:
+    When new orders arrive, the `Kitchen` signals `waiting Cook threads` using a `condition variable`, waking them to begin processing pizzas:
+
+        ```cpp
+        CondVar m_pizzaQueueCV;
+        ```
+
+3. **Kitchen to Reception Feedback Loop**
+    - <u> Completion Notifications </u>:
+    When a `Cook` finishes a `pizza`, the `Kitchen` sends a `CookedPizza` message to `Reception`.
+
+        ```cpp
+        m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
+        ```
+        - *this serializes then sends to the reception the id of the kitchen with the pizza type that has been completed*
+
+    - <u> Closure Signals </u>:
+    If a `Kitchen` becomes `idle` for too long, *no orders for 5 seconds*, it sends a `Closed` message to `Reception` before terminating.
+
 # Load Balancer
 
+As afermentioned above. `Reception` periodically sends `RequestStatus` messages to all `Kitchens` to monitor their workload, ingredient levels, and idle time. This information grants `Reception` the ability to start the `pizza distrubtion`. The `Load Balancer` rearranges the kitchen vector specifically with this priority method:
+<br><br>
+        ***idleCount*** *>* ***pizzaCount*** *>* ***pizzaTime*** *>* ***id***
+<br><br>
+It firsts checks to see how many `cooks` are `idle` *not working*. If they are identical it check pizza amount found in the kitchen. If still identical it checks their pizzaTime, the Time left to individually cook each pizza found in their queue. Finally if they are truly identical, they are simply sorted by id number.
+
 # bonus Feature
+
+This projects contains additional features not required by the cirriculum. notably the creation of a window to visualize the cooking process
