@@ -83,7 +83,29 @@ They utlize a type-safe variant system for the different types of message:<br><b
 
 ## Encapsulation
 
-this project ecapsluates multiplpe encapsulation of methods and variable, creating in total _ classes: 
+this project ecapsluates multiplpe encapsulation of methods and variable, creating in total, 4 classes:
+- **Process**: Encapsulates process creation and management using the `fork()` system call. `Kitchen` is the only class that inherits its behavior, which handles:
+    * Creating new `Kitchen processes` when needed
+    * Managing `parent-child` relationships between `Reception` and `Kitchens`
+    * Handling `process exit codes` and `status information`
+
+- **Thread**: Encapsulates `thread` creation and management using the `pthread` library. exculsively inherited by the `cook` class. its primarly used for:
+    * Creating `Cook threads` within each `Kitchen process`
+    * Managing `thread lifecycle` (*creation, execution, joining*)
+    * Providing a standardized interface for `thread execution`
+    * Implementing background tasks like ingredient restocking
+
+- **Mutex**: Encapsulates `mutual exclusion primitives` that prevent `multiple threads` from accessing shared resources simultaneously. No class inherits `Mutex` but all of them contains it as a `variable`, utlizing it for various means. Such as:
+    * Protecting access to the shared ingredients `inventory`
+    * Ensuring thread-safe `order queue operations`
+    * Protecting internal kitchen state during `status updates`
+    * Synchronizing access to the cooked pizzas collection
+
+- **Condvar**: stands for `conditional variable`, this `class` encapsulates the `standard condition variable functionality`. It provides a mechanism for `threads` to block until notified by another thread that a condition has been met. once again no class inherits Condvar. Condvar is utilized in 3 instances:
+   * Implementing `producer-consumer` patterns between `Reception` and `Cooks`
+   * Allowing `Cooks` to wait for new orders without consuming `CPU`
+   * Signaling when ingredients have been restocked
+
 
 ## Dialogue Logic
 
