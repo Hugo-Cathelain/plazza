@@ -83,6 +83,8 @@ They utlize a type-safe variant system for the different types of message:<br><b
 
 ## Encapsulation
 
+this project ecapsluates multiplpe encapsulation of methods and variable, creating in total _ classes: 
+
 ## Dialogue Logic
 
 # Load Balancer
