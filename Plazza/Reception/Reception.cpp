@@ -461,6 +461,15 @@ void Reception::WindowRoutine(void)
         window.clear();
         window.draw(backgroundSprite);
 
+        std::vector<Message::Status> kitchenStatuses;
+        {
+            std::lock_guard<std::mutex> lock(m_kitchenMutex);
+            for (const auto& kitchen : kitchensToDraw)
+            {
+                kitchenStatuses.push_back(kitchen->status);
+            }
+        }
+
         for (size_t i = 0; i < kitchensToDraw.size(); i++)
         {
             kitchenSprite.setPosition(sf::Vector2f(0.0f,
@@ -474,20 +483,28 @@ void Reception::WindowRoutine(void)
             window.draw(kitchenSprite);
 
             size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
-            const Message::Status& status = kitchensToDraw[i]->status;
+            const Message::Status& status = KitchenStatuses[i];
             size_t idleCooks = status.idleCount;
             size_t busyCooks = totalCooks - idleCooks;
+
+            // std::string statusText = "Kitchen #" + std::to_string(kitchensToDraw[i]->GetID()) +
+            //                          "\nCooks: " + std::to_string(idleCooks) + "/" + std::to_string(totalCooks) +
+            //                          "\nPizza Queue: " + std::to_string(status.pizzaCount) +
+            //                          "\nTime: " + std::to_string(status.timestamp / 1000) + "s";
+
+            std::cout << "Kitchen #" << kitchensToDraw[i]->GetID() << ": "
+                      << "Cooks: " << idleCooks << "/" << totalCooks
+                      << ", Pizza in kitchen: " << status.pizzaCount + (m_cookCount - idleCooks)
+                      << ", Time: " << status.timestamp / 1000 << "s"
+                      << std::endl;
 
             // for (size_t c = 0; c < totalCooks; c++) {
             //     cookSprite.setPosition(COOK_START_X + c * COOK_SPACING, kitchenY + COOK_START_Y);
 
-            //     // Change appearance based on idle/busy status
             //     if (c < busyCooks) {
-            //         // Busy cook (working)
-            //         cookSprite.setColor(sf::Color(255, 255, 255)); // Normal color
+            //         cookSprite.setColor(sf::Color(255, 255, 255));
             //     } else {
-            //         // Idle cook
-            //         cookSprite.setColor(sf::Color(150, 150, 255)); // Bluish tint
+            //         cookSprite.setColor(sf::Color(150, 150, 255));
             //     }
 
             //     window.draw(cookSprite);
@@ -501,23 +518,11 @@ void Reception::WindowRoutine(void)
 
 } // !namespace Plazza
 
-
-            // // Draw cooks in this kitchen
-            // size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
-            // const Message::Status& status = kitchensToDraw[i]->status;
-            // size_t idleCooks = status.idleCount;
-            // size_t busyCooks = totalCooks - idleCooks;
-
             // // Draw status text
             // sf::Text kitchenStatus;
             // kitchenStatus.setFont(font);
             // kitchenStatus.setCharacterSize(18);
             // kitchenStatus.setFillColor(sf::Color::White);
-
-            // std::string statusText = "Kitchen #" + std::to_string(kitchensToDraw[i]->GetID()) +
-            //                          "\nCooks: " + std::to_string(idleCooks) + "/" + std::to_string(totalCooks) +
-            //                          "\nPizza Queue: " + std::to_string(status.pizzaCount) +
-            //                          "\nStock: " + std::to_string(status.stock);
 
             // if (idleCooks == totalCooks) {
             //     statusText += "\nIdle Time: " + std::to_string(status.timestamp) + "ms";
