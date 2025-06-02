@@ -192,9 +192,10 @@ using the compiling method explained above. One simply needs to build with `make
 this will compile the base code with the conditional flag: ***PLAZZA_BONUS***, opening up access to brand new features.
 
 1. ***Window Pop Up***: The first as mentioned is the creation of a `window` with the `reception` in full view
-2. ***Sound Integration***: You should also hear the wonderful pizzeria music in the background thanks to our music and `sound intergration`.
-3. ***Kitchen Stacking Protocol***: By giving your pizza order in the `CLI` you will see all the `kitchens` stack ontop of the `reception`. they will appear and dissapear when in and out of use.
-4. ***Kitchen Info***: in the `kitchen` you can identify the amount of `chefs`, `pizza` amount as well as the `kitchen` Timer. counting down to the `kitchens` <span style="color: red;">death</span>.
+2. ***Asset creation***: all of our assets are hand assembled in `Figma`
+3. ***Sound Integration***: You should also hear the wonderful pizzeria music in the background thanks to our music and `sound integration`.
+4. ***Kitchen Stacking Protocol***: By giving your pizza order in the `CLI` you will see all the `kitchens` stack ontop of the `reception`. they will appear and dissapear when in and out of use.
+5. ***Kitchen Info***: in the `kitchen` you can identify the amount of `chefs`, `pizza` amount as well as the `kitchen` Timer. counting down to the `kitchens` <span style="color: red;">death</span>.
 
 
 <br>
