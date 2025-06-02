@@ -133,7 +133,7 @@ The dialogue logic can be divvied up into 3 major parts:
         ```
         - *in this case, reception serializes the order, containing the kitchen id as well as the pizza order*
     - <u> Status Queries </u> :
-    Reception periodically sends `RequestStatus` messages to all `Kitchens` to monitor their workload, ingredient levels, and idle time.
+    Every tick, `Kitchen` sends his status over `Recepption` and reception uses this information to monitor their workload, ingredient levels, and idle time.
 
         ```cpp
         message->GetIf<Message::Status>()
@@ -172,11 +172,12 @@ The dialogue logic can be divvied up into 3 major parts:
         - *this serializes then sends to the reception the id of the kitchen with the pizza type that has been completed*
 
     - <u> Closure Signals </u>:
-    If a `Kitchen` becomes `idle` for too long, *no orders for 5 seconds*, it sends a `Closed` message to `Reception` before terminating.
+    If a `Kitchen` becomes `idle` for too long, *no orders for 5 seconds*, it sends a `Closed` message to `Reception` before terminating. Upon receiving the message, `Reception` sends the `Closed` message back, allowing both the `Kitchen` to close itself safely and the `Reception` to finalize its processes properly."
+
 
 # Load Balancer
 
-As afermentioned, `Reception` periodically sends `RequestStatus` messages to all `Kitchens` to monitor their workload, ingredient levels, and idle time. This information grants `Reception` the ability to properly distribute the pizza's. The `Load Balancer` rearranges the `kitchen vector` specifically with this priority method:
+As afermentioned, `Reception` periodically recieves status update messages from all `Kitchens` to monitor their workload, ingredient levels, and idle time. This information grants `Reception` the ability to properly distribute the pizza's. The `Load Balancer` rearranges the `kitchen vector` specifically with this priority method:
 <br><br>
         ***idleCount*** *>* ***pizzaCount*** *>* ***pizzaTime*** *>* ***id***
 <br><br>
