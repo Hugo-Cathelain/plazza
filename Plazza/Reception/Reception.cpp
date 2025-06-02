@@ -7,6 +7,7 @@
 #include "IPC/Pipe.hpp"
 #include "Pizza/APizza.hpp"
 #include "Utils/Logger.hpp"
+#include <math.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Namespace Plazza
@@ -293,11 +294,18 @@ void Reception::WindowRoutine(void)
     const float WINDOW_WIDTH = 985.f;
     const float SCROLL_SPEED = 30.f;
     const float SCREEN_MARGIN = 200.f;
-    // const float COOK_WIDTH = 80.f;
-    // const float COOK_HEIGHT = 100.f;
-    // const float COOK_START_X = 200.f;
-    // const float COOK_START_Y = 150.f;
-    // const float COOK_SPACING = 120.f;
+
+    // Z particle system for sleeping effect
+    struct ZParticle {
+        sf::Vector2f position;
+        float alpha;
+        float age;
+        size_t kitchenIndex;
+    };
+    std::vector<ZParticle> zParticles;
+    const float Z_SPAWN_INTERVAL = 0.8f; // New Z every 0.8 seconds
+    const float Z_LIFETIME = 2.4f; // Z lives for 2.4 seconds (3 Zs max at 0.8s intervals)
+    float lastZSpawn = 0.0f;
 
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     const float screenApiHeight = static_cast<float>(desktop.height);
@@ -327,6 +335,7 @@ void Reception::WindowRoutine(void)
         static_cast<unsigned int>(WINDOW_WIDTH),
         static_cast<unsigned int>(actualWindowHeight)
     ), "The Plazza", sf::Style::Default);
+    sf::Clock clock;
     sf::View view;
     sf::Event event;
     sf::Texture backgroundTexture;
@@ -344,20 +353,25 @@ void Reception::WindowRoutine(void)
         return;
     }
 
-    // if (!cookTexture.loadFromFile("Assets/Images/Cook.png"))
-    // {
-    //     return;
-    // }
+    if (!cookTexture.loadFromFile("Assets/Images/Cooks.png"))
+    {
+        return;
+    }
 
-    // if (!font.loadFromFile("Assets/Fonts/Font.ttf"))
-    // {
-    //     return;
-    // }
+    if (!font.loadFromFile("Assets/Fonts/lilitaone.ttf"))
+    {
+        return;
+    }
 
     sf::Sprite kitchenSprite(kitchensTexture);
     sf::Sprite backgroundSprite(backgroundTexture);
-    // sf::Sprite cookSprite(cookTexture);
+    sf::Sprite cookSprite(cookTexture);
     sf::Music music;
+    sf::Text text;
+
+    text.setFont(font);
+    text.setFillColor(sf::Color::White);
+
     if (!music.openFromFile("Assets/Musics/Game.ogg"))
     {
         return;
@@ -372,6 +386,7 @@ void Reception::WindowRoutine(void)
     {
         view.setCenter(WINDOW_WIDTH / 2.f, actualWindowHeight / 2.f);
     }
+    window.setFramerateLimit(60);
     window.setView(view);
     music.setLoop(true);
     music.play();
@@ -417,15 +432,18 @@ void Reception::WindowRoutine(void)
             break;
         }
 
-        std::vector<std::shared_ptr<Kitchen>> kitchensToDraw;
+        std::vector<Message::Status> kitchenStatuses;
         {
             std::lock_guard<std::mutex> lock(m_kitchenMutex);
-            kitchensToDraw = m_kitchens;
+            for (const auto& kitchen : m_kitchens)
+            {
+                kitchenStatuses.push_back(kitchen->status);
+            }
         }
 
-        if (kitchensToDraw.size() != kitchenCountSnapshot)
+        if (kitchenStatuses.size() != kitchenCountSnapshot)
         {
-            auto new_dims = get_view_and_content_heights(kitchensToDraw.size());
+            auto new_dims = get_view_and_content_heights(kitchenStatuses.size());
             float newContentTotalHeight = new_dims.first;
             float newActualWindowHeight = new_dims.second;
 
@@ -455,63 +473,150 @@ void Reception::WindowRoutine(void)
             }
             view.setCenter(sf::Vector2f(WINDOW_WIDTH / 2.f, targetNewCenterY));
             window.setView(view);
-            kitchenCountSnapshot = kitchensToDraw.size();
+            kitchenCountSnapshot = kitchenStatuses.size();
         }
 
-        backgroundSprite.setPosition(sf::Vector2f(0.0f,
-            kitchensToDraw.size() * KITCHEN_HEIGHT));
-        window.clear();
-        window.draw(backgroundSprite);
+        float time = clock.getElapsedTime().asSeconds();
 
-        std::vector<Message::Status> kitchenStatuses;
+        // Update Z particles
+        for (auto it = zParticles.begin(); it != zParticles.end();)
         {
-            std::lock_guard<std::mutex> lock(m_kitchenMutex);
-            for (const auto& kitchen : kitchensToDraw)
+            it->age += 1.0f / 60.0f; // Assuming 60 FPS
+            it->position.y -= 20.0f / 60.0f; // Move up slowly
+            it->position.x += std::sin(it->age * 3.0f) * 10.0f / 60.0f; // Slight horizontal drift
+            it->alpha = 1.0f - (it->age / Z_LIFETIME); // Fade out over time
+
+            if (it->age >= Z_LIFETIME)
             {
-                kitchenStatuses.push_back(kitchen->status);
+                it = zParticles.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 
-        for (size_t i = 0; i < kitchensToDraw.size(); i++)
+        // Spawn new Z particles for idling cooks
+        if (time - lastZSpawn >= Z_SPAWN_INTERVAL)
         {
-            kitchenSprite.setPosition(sf::Vector2f(0.0f,
-                (kitchensToDraw.size() - 1 - i) * KITCHEN_HEIGHT));
+            for (size_t i = 0; i < kitchenStatuses.size(); i++)
+            {
+                sf::Vector2f offset = sf::Vector2f(
+                    0.0f, (kitchenStatuses.size() - 1 - i) * KITCHEN_HEIGHT
+                );
+
+                ZParticle newZ;
+                newZ.position = offset + sf::Vector2f(WINDOW_WIDTH - 380, KITCHEN_HEIGHT - 230);
+                newZ.alpha = 1.0f;
+                newZ.age = 0.0f;
+                newZ.kitchenIndex = i;
+                zParticles.push_back(newZ);
+            }
+            lastZSpawn = time;
+        }
+
+        backgroundSprite.setPosition(sf::Vector2f(0.0f,
+            kitchenStatuses.size() * KITCHEN_HEIGHT));
+        window.clear();
+        window.draw(backgroundSprite);
+
+        static const sf::IntRect DESK_RECT({135, 168}, {122, 64});
+        static const sf::IntRect BODY_RECT({0, 168}, {57, 55});
+        static const sf::IntRect RHAND_RECT({57, 168}, {23, 35});
+        static const sf::IntRect LHAND_RECT({80, 168}, {23, 35});
+        static const sf::IntRect ZLTRS_RECT({103, 168}, {32, 32});
+        static const sf::IntRect EXCLA_RECT({257, 168}, {20, 40});
+
+        for (size_t i = 0; i < kitchenStatuses.size(); i++)
+        {
+            sf::Vector2f offset = sf::Vector2f(
+                0.0f, (kitchenStatuses.size() - 1 - i) * KITCHEN_HEIGHT
+            );
+
+            float breathingOffset = std::sin(time * 2.5f + i * 0.5f) * 3.0f;
+            float cookingOffset = std::sin(time * 7.5f + i * 0.7f) * 5.0f;
+
+            kitchenSprite.setPosition(offset);
             kitchenSprite.setTextureRect(sf::IntRect(
-                sf::Vector2i(0, (kitchensToDraw[i]->GetID() % 20) *
+                sf::Vector2i(0, (kitchenStatuses[i].id % 20) *
                     static_cast<int>(KITCHEN_HEIGHT)),
                 sf::Vector2i(static_cast<int>(WINDOW_WIDTH),
                     static_cast<int>(KITCHEN_HEIGHT))
             ));
             window.draw(kitchenSprite);
 
-            size_t totalCooks = std::min(static_cast<size_t>(4), m_cookCount);
-            const Message::Status& status = kitchenStatuses[i];
-            size_t idleCooks = status.idleCount;
-            // size_t busyCooks = totalCooks - idleCooks;
+            // Kitchen ID
+            text.setPosition(offset);
+            text.setString(std::to_string(kitchenStatuses[i].id));
+            window.draw(text);
 
-            // std::string statusText = "Kitchen #" + std::to_string(kitchensToDraw[i]->GetID()) +
-            //                          "\nCooks: " + std::to_string(idleCooks) + "/" + std::to_string(totalCooks) +
-            //                          "\nPizza Queue: " + std::to_string(status.pizzaCount) +
-            //                          "\nTime: " + std::to_string(status.timestamp / 1000) + "s";
+            // Idling Cooks
+                // body
+            cookSprite.setTextureRect(BODY_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 390, KITCHEN_HEIGHT - 148));
+            window.draw(cookSprite);
+                // left hand
+            cookSprite.setTextureRect(RHAND_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 394, KITCHEN_HEIGHT - 136));
+            window.draw(cookSprite);
+                // right hand
+            cookSprite.setTextureRect(LHAND_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 352, KITCHEN_HEIGHT - 136));
+            window.draw(cookSprite);
+                // head
+            cookSprite.setTextureRect(sf::IntRect({78 * ((int)kitchenStatuses[i].id % 8), 0}, {78, 84}));
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 404, KITCHEN_HEIGHT - 212 + breathingOffset));
+            window.draw(cookSprite);
+                // desk
+            cookSprite.setTextureRect(DESK_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 422, KITCHEN_HEIGHT - 108));
+            window.draw(cookSprite);
+                // data
+            text.setString(std::to_string(kitchenStatuses[i].idleCount));
+            sf::FloatRect bound = text.getLocalBounds();
+            text.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 422 + ((122 - bound.width) / 2.f), KITCHEN_HEIGHT - 82));
+            window.draw(text);
 
-            std::cout << "Kitchen #" << kitchensToDraw[i]->GetID() << ": "
-                      << "Cooks: " << idleCooks << "/" << totalCooks
-                      << ", Pizza in kitchen: " << status.pizzaCount + (m_cookCount - idleCooks)
-                      << ", Time: " << status.timestamp / 1000 << "s"
-                      << std::endl;
-
-            // for (size_t c = 0; c < totalCooks; c++) {
-            //     cookSprite.setPosition(COOK_START_X + c * COOK_SPACING, kitchenY + COOK_START_Y);
-
-            //     if (c < busyCooks) {
-            //         cookSprite.setColor(sf::Color(255, 255, 255));
-            //     } else {
-            //         cookSprite.setColor(sf::Color(150, 150, 255));
-            //     }
-
-            //     window.draw(cookSprite);
-            // }
+            // Active Cooks
+                // body
+            cookSprite.setTextureRect(BODY_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 212, KITCHEN_HEIGHT - 148));
+            window.draw(cookSprite);
+                // left hand
+            cookSprite.setTextureRect(RHAND_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 216, KITCHEN_HEIGHT - 136 - cookingOffset));
+            window.draw(cookSprite);
+                // right hand
+            cookSprite.setTextureRect(LHAND_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 174, KITCHEN_HEIGHT - 136 + cookingOffset));
+            window.draw(cookSprite);
+                // head
+            cookSprite.setTextureRect(sf::IntRect({78 * ((int)kitchenStatuses[i].id % 8), 84}, {78, 84}));
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 226, KITCHEN_HEIGHT - 212 + breathingOffset));
+            window.draw(cookSprite);
+                // desk
+            cookSprite.setTextureRect(DESK_RECT);
+            cookSprite.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 244, KITCHEN_HEIGHT - 108));
+            window.draw(cookSprite);
+                // data
+            text.setString(std::to_string(m_cookCount - kitchenStatuses[i].idleCount));
+            bound = text.getLocalBounds();
+            text.setPosition(offset + sf::Vector2f(WINDOW_WIDTH - 244 + ((122 - bound.width) / 2.f), KITCHEN_HEIGHT - 82));
+            window.draw(text);
         }
+
+        // Draw Z particles
+        for (const auto& z : zParticles)
+        {
+            cookSprite.setTextureRect(ZLTRS_RECT);
+            cookSprite.setPosition(z.position);
+            cookSprite.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(z.alpha * 255)));
+            window.draw(cookSprite);
+        }
+
+        // Reset sprite color for next frame
+        cookSprite.setColor(sf::Color::White);
+
         window.display();
     }
     music.stop();
