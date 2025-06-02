@@ -517,17 +517,3 @@ void Reception::WindowRoutine(void)
 #endif
 
 } // !namespace Plazza
-
-            // // Draw status text
-            // sf::Text kitchenStatus;
-            // kitchenStatus.setFont(font);
-            // kitchenStatus.setCharacterSize(18);
-            // kitchenStatus.setFillColor(sf::Color::White);
-
-            // if (idleCooks == totalCooks) {
-            //     statusText += "\nIdle Time: " + std::to_string(status.timestamp) + "ms";
-            // }
-
-            // kitchenStatus.setString(statusText);
-            // kitchenStatus.setPosition(20.f, kitchenY + 20.f);
-            // window.draw(kitchenStatus);

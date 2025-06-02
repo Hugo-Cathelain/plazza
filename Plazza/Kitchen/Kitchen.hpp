@@ -11,7 +11,6 @@
 #include "Concurrency/Mutex.hpp"
 #include "Kitchen/Cook.hpp"
 #include "Kitchen/Stock.hpp"
-#include "Kitchen/ThreadPool.hpp"
 #include "Utils/Timer.hpp"
 #include "IPC/Pipe.hpp"
 #include "Pizza/IPizza.hpp"
