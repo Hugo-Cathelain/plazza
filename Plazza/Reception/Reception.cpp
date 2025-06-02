@@ -247,7 +247,8 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
                 needNewKitchen = false;
                 Logger::Debug(
                     "RECEPTION",
-                    "Pizza dispatch to " + std::to_string(st.id)
+                    pizza->ToString() + " dispatched to kitchen " +
+                    std::to_string(st.id)
                 );
                 break;
             }
@@ -276,7 +277,8 @@ void Reception::ProcessOrders(const Parser::Orders& orders)
 
             Logger::Debug(
                 "RECEPTION",
-                "Pizza dispatch to " + std::to_string(allStatus.back().id)
+                pizza->ToString() + " dispatched to kitchen "
+                + std::to_string(allStatus.back().id)
             );
         }
     }
