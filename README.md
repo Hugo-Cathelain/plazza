@@ -41,7 +41,7 @@ Our testing methodology extends beyond just Unit tests. Along with, we have deve
 
 ## Logfile
 
-All of the `CLI` output are directed into our log file `plazza.log` to not clutter the CLI during simulation, whilst simultaneously acquiring substanital information useful for debugging and testing.
+We've also implented a `logging system` with The class `Logger`. Now, All of the `CLI` output are directed into our log file `plazza.log` to not clutter the CLI during simulation, whilst simultaneously acquiring substanital information useful for debugging and testing. this information includes but is not limited to timestamp of execution, message type (*Info, Warning, Error, Debug*), sender, and message.
 
 # Architecture
 
