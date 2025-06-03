@@ -1,208 +1,214 @@
-# The Plazza
+# 🍕 The Plazza
 
-The `Plazza` is a `multithreaded simulation` of a pizzeria designed to efficiently manage the pizza-making process. The system
-implements a `concurrent architecture` where a `Reception` handles incoming orders and distributes them to multiple `Kitchen instances`. Each `Kitchen` maintains its own `inventory` of ingredients and employs several `Cook threads` that prepare pizzas simultaneously.
+**The Plazza** is a sophisticated **multithreaded simulation** of a pizzeria designed to efficiently manage pizza production at scale. The system implements a **concurrent architecture** utilizing modern C++ design patterns where a centralized `Reception` handles incoming orders and intelligently distributes them across multiple `Kitchen` instances. Each `Kitchen` maintains its own isolated `inventory` of ingredients and employs several `Cook` threads that prepare pizzas concurrently.
 
-# Installation/Setup
+## 🔧 Installation & Setup
 
 This project is compiled via `Makefile` with two build options:
-- `make` or `make re`: Standard compilation for the base simulation
-- `make bonus`: Enables additional features through conditional compilation (*PLAZZA_BONUS flag*), activating a graphical visualization of the pizzeria
 
-# Basic Usage
+- **`make` or `make re`**: Standard compilation for the base simulation
+- **`make bonus`**: Enables additional features through conditional compilation (`PLAZZA_BONUS` flag), activating a graphical visualization of the pizzeria
 
-once compiled with a `make` you can launch the project with the binary `./plazza`
-with 3 flags for the `cooking speed multiplier`, the amount of `cooks per kitchen` and `restock time`, the amount of time it takes to restock 1 of every item.
+### Prerequisites
+
+- C++17 compatible compiler (GCC/Clang)
+- POSIX-compliant system (Linux/macOS)
+- Make build system
+- pthread library
+
+## 🚀 Basic Usage
+
+Once compiled with `make`, you can launch the project with the binary `./plazza` using three mandatory parameters:
 
 ```bash
 ./plazza <multiplier> <cooks_per_kitchen> <restock_time_ms>
 ```
 
-# Testing
+**Parameters:**
+- `multiplier`: Cooking speed multiplier (floating-point value)
+- `cooks_per_kitchen`: Number of cooks per kitchen instance (integer)
+- `restock_time_ms`: Time required to restock one unit of every ingredient (milliseconds)
 
-## unit tests
-In addition to the two make builds for program execution; we provide a third option for `unit tests`. This can be compiled with: `make tests_run`
+### Example
 
-This option runs 40 comprehensive tests across our codebase, focusing on:
+```bash
+./plazza 2.0 4 2000
+```
 
-1. **Parsing**: Tests for command-line input parsing and validation
-2. **PizzaFactory**: Tests our pizza creation system which is derived from our `Singleton` pattern
-3. **Singleton**: Tests our implementation of the Singleton design pattern
+## 🧪 Testing
 
-The test suite first verifies the PizzaFactory functionality and available commands, then validates our Singleton implementation by creating a `mock class`.
+### Unit Tests
 
-<bre>
+In addition to the two make builds for program execution, we provide a comprehensive testing suite. This can be compiled with:
 
-## Error Classes
+```bash
+make tests_run
+```
 
-Our testing methodology extends beyond just Unit tests. Along with, we have developed a `hierarchy` of `error classes`, with the top-level class inheriting from `std::exception`; `Exception`. The classes `InvalidArgument` and `ParsingException` are derived from this `Exception` class.
+This option runs **40 comprehensive tests** across our codebase, focusing on:
 
-<bre>
+1. **Parsing**: Command-line input parsing and validation
+2. **PizzaFactory**: Pizza creation system derived from our `Singleton` pattern
+3. **Singleton**: Implementation validation of the Singleton design pattern
 
-## Logfile
+The test suite first verifies the PizzaFactory functionality and available commands, then validates our Singleton implementation by creating a mock class.
 
-We've also implented a `logging system` with The class `Logger`. Now, All of the `CLI` output are directed into our log file `plazza.log` to not clutter the CLI during simulation, whilst simultaneously acquiring substanital information useful for debugging and testing. this information includes but is not limited to timestamp of execution, message type (*Info, Warning, Error, Debug*), sender, and message.
+### Error Handling Architecture
 
-# Architecture
+Our testing methodology extends beyond unit tests. We have developed a **hierarchical error class system**, with the top-level class inheriting from `std::exception`: `Exception`. The classes `InvalidArgument` and `ParsingException` are derived from this `Exception` base class.
 
-We can seperate the architecture into 3 parts. `IPC`, `Encapsulation` and `Dialogue Logic`
+### Logging System
 
+We've implemented a comprehensive **logging system** via the `Logger` class. All CLI output is directed to our log file `plazza.log` to maintain a clean CLI during simulation while simultaneously acquiring substantial debugging information.
 
-## IPC
-In computer science, `interprocess communication (IPC)` is the sharing of data between running processes in a computer system.<bre>
-The IPC used in plazza is a `Named pipes` IPC also called a `FIFO`.
+**Log information includes:**
+- Timestamp of execution
+- Message type (`Info`, `Warning`, `Error`, `Debug`)
+- Sender identification
+- Detailed message content
 
-- **Interface Definition**<br>
-The abstract interface: `IIPCChannel` defines the proper communication channels creating a base composed of these 4 methods: `Open()`, `Close`, `SendMessage()`, `PollMessage()`
+## 🏗️ Architecture
 
-- **Named Pipes Implentation**<br>
-The `pipe` class implements the `IIPCChannel` using `Named Pipe (FIFO)` mechanism. 2 predefined pipes are used to communicate between `reception` and `kitchen`:<br>
+The architecture can be separated into three core components: **IPC**, **Encapsulation**, and **Communication Logic**.
+
+### 🔄 Interprocess Communication (IPC)
+
+The IPC implementation uses **Named Pipes (FIFO)** for efficient process communication.
+
+#### Interface Definition
+The abstract interface `IIPCChannel` defines proper communication channels with four essential methods:
+- `Open()`
+- `Close()`
+- `SendMessage()`
+- `PollMessage()`
+
+#### Named Pipes Implementation
+The `Pipe` class implements `IIPCChannel` using Named Pipe (FIFO) mechanisms. Two predefined pipes facilitate communication between `Reception` and `Kitchen`:
+
 ```cpp
 #define KITCHEN_TO_RECEPTION_PIPE "/tmp/plazza_kitchen_to_reception_pipe"
 #define RECEPTION_TO_KITCHEN_PIPE "/tmp/plazza_reception_to_kitchen_pipe"
 ```
-- **Message Serialization**<br>
-Messages are serialized/deserialized using the `Message` class.
-They utlize a type-safe variant system for the different types of message:<br><br>
-    * `Closed`: Notification that a kitchen is closing
-    * `Order`: New pizza orders from Reception to Kitchen
-    * `Status`: Kitchen status updates sent to Reception
-    * `RequestStatus`: Requests for status updates
-    * `CookedPizza`: Notification that a pizza is ready
 
-- **functionality**
+#### Message Serialization
+Messages are serialized/deserialized using the `Message` class, utilizing a type-safe variant system for different message types:
 
-    1. **Pipe Creation, Connection**
-        * Pipes are created using `mkfifo()` in the `Pipe::Open()` method
-        * Each pipe has a designated direction `READ_ONLY or WRITE_ONLY`
-        * The `Reception` and `Kitchen` processes connect to the same `named pipes` but with `opposite` modes
-    2. **Non-blocking I/O**
-        * utilizes flag `O_NONBLOCK` allows the `PollMessage()` method to check for messages without hanging
-    3. **Message Protocol**
-        * Messages are formatted with a `4-byte` length header followed by the serialized payload. The payload itself is packed with a `message type byte` followed by the message contents. The `PollMessage()` method accumulates partial reads in a buffer until a complete message is received
-    4. **Bidirectional Communication FLow**
-        * The `Reception` sends orders to `Kitchens` via `one pipe` Kitchens respond with status updates and `CookedPizza` notifications via the `other pipe`. This separation of concerns allows for clear, organized communication between processes. i.e:
-        ```cpp
-        #define KITCHEN_TO_RECEPTION_PIPE "/tmp/plazza_kitchen_to_reception_pipe"
-        ```
-        in **kitchen**:
-        ```cpp
-        m_toReception = std::make_unique<Pipe>(std::string(KITCHEN_TO_RECEPTION_PIPE), Pipe::OpenMode::WRITE_ONLY);
-        ```
-        in **reception**:
-        ```cpp
-        m_pipe(std::make_unique<Pipe>(KITCHEN_TO_RECEPTION_PIPE, Pipe::OpenMode::READ_ONLY))
-        ```
+- **`Closed`**: Kitchen closure notification
+- **`Order`**: New pizza orders from Reception to Kitchen
+- **`Status`**: Kitchen status updates sent to Reception
+- **`RequestStatus`**: Status update requests
+- **`CookedPizza`**: Pizza completion notification
 
-## Encapsulation
+#### Core Functionality
 
-this project ecapsluates multiplpe encapsulation of methods and variable, creating in total, 4 classes:
-- **Process**: Encapsulates process creation and management using the `fork()` system call. `Kitchen` is the only class that inherits its behavior, which handles the :
-    * Creation of new `Kitchen processes` when needed
-    * Management of the `parent-child` relationships between `Reception` and `Kitchens`
-    * Handling of the `process exit codes` and `status information`
+1. **Pipe Creation & Connection**
+   - Pipes created using `mkfifo()` in `Pipe::Open()`
+   - Each pipe has designated direction (`READ_ONLY` or `WRITE_ONLY`)
+   - Reception and Kitchen processes connect to same named pipes with opposite modes
 
-- **Thread**: Encapsulates thread creation and management using the `pthread` library. exculsively inherited by the `cook` class. Its primarly used for :
-    * Creating `Cook threads` within each `Kitchen process`
-    * Managing `thread lifecycle` (*creation, execution, joining*)
-    * Providing a standardized interface for `thread execution`
-    * Implementing background tasks like ingredient restocking
+2. **Non-blocking I/O**
+   - Utilizes `O_NONBLOCK` flag for non-blocking operations
+   - `PollMessage()` checks for messages without blocking
 
-- **Mutex**: Encapsulates `mutual exclusion primitives` that prevent `multiple threads` from accessing shared resources simultaneously. No class inherits `Mutex` but all of them contains it as a `variable`; utlizing it for various means. Such as:
-    * Protecting access to the shared ingredients `inventory`
-    * Ensuring thread-safe `order queue operations`
-    * Protecting internal kitchen state during `status updates`
-    * Synchronizing access to the cooked pizzas collection
+3. **Message Protocol**
+   - 4-byte length header + serialized payload
+   - Message type byte + message contents
+   - Partial read accumulation until complete message received
 
-- **Condvar**: Stands for `conditional variable`, this `class` encapsulates the `standard condition variable functionality`. It provides a mechanism for `threads` to block until certain conditions has been met. Once again no class inherits Condvar. Condvar is utilized in 3 instances:
-   * Implementing `producer-consumer` patterns between `Reception` and `Cooks`
-   * Allowing `Cooks` to wait for new orders without consuming `CPU`
-   * Signaling when ingredients have been restocked
+4. **Bidirectional Communication Flow**
+   - Reception sends orders to Kitchens via one pipe
+   - Kitchens respond with status updates and notifications via another pipe
 
+### 🎯 Encapsulation
 
-## Dialogue Logic
+The project implements multiple encapsulation layers through four primary classes:
 
-The dialogue logic can be divvied up into 3 major parts:
+#### Process
+Encapsulates process creation and management using `fork()` system call. Exclusively inherited by `Kitchen` class for:
+- Creating new Kitchen processes when needed
+- Managing parent-child relationships between Reception and Kitchens
+- Handling process exit codes and status information
 
-1. **Cooks and Kitchen Manager**
-    - <u>Order Submission</u> :
-    When a customer places an order at the `Reception`, it `serializes` the `order` into a Message and sends it to the appropriate `Kitchen` via `named pipes`:
+#### Thread
+Encapsulates thread creation and management using pthread library. Exclusively inherited by `Cook` class for:
+- Creating Cook threads within each Kitchen process
+- Managing thread lifecycle (creation, execution, joining)
+- Providing standardized interface for thread execution
+- Implementing background tasks like ingredient restocking
 
-        ```cpp
-        pipe->SendMessage(Message::Order{st.id, pizza->Pack()});
-        ```
-        - *in this case, reception serializes the order, containing the kitchen id as well as the pizza order*
-    - <u> Status Queries </u> :
-    Every tick, `Kitchen` sends his status over `Recepption` and reception uses this information to monitor their workload, ingredient levels, and idle time.
+#### Mutex
+Encapsulates mutual exclusion primitives preventing multiple threads from accessing shared resources simultaneously. Used as member variables for:
+- Protecting shared ingredient inventory access
+- Ensuring thread-safe order queue operations
+- Protecting internal kitchen state during status updates
+- Synchronizing cooked pizza collection access
 
-        ```cpp
-        message->GetIf<Message::Status>()
-        ```
-        - *this is then used to calculate the load balance used for efficient pizza distribution between each kitchen*
+#### CondVar (Condition Variable)
+Encapsulates standard condition variable functionality, providing mechanisms for threads to block until specific conditions are met. Utilized for:
+- Implementing producer-consumer patterns between Reception and Cooks
+- Allowing Cooks to wait for new orders without consuming CPU
+- Signaling when ingredients have been restocked
 
-2. **Kitchen Internal Communication**
-    - <u> Cooks and Kitchen Manager</u>:
-    Each `Kitchen` manages their `cooks` via a `thread pool` represented by a :
+### 💬 Communication Logic
 
-        ```cpp
-        std::vector<std::unique_ptr<Cook>> m_cooks;
-        ```
+The communication logic consists of three major components:
 
-    - <u> Order Queue </u>:
-    `Orders` received from `Reception` are placed in a `thread-safe queue`, protected by `mutexes`:
+#### 1. Reception and Kitchen Management
+- **Order Submission**: Customer orders at Reception are serialized and sent to appropriate Kitchen via named pipes
+- **Status Queries**: Kitchens periodically send status updates to Reception for workload monitoring
 
-        ```cpp
-        std::queue<uint16_t> m_pizzaQueue;
-        Mutex m_pizzaQueueMutex;
-        ```
-    - <u> Cook Notification </u>:
-    When new orders arrive, the `Kitchen` signals `waiting Cook threads` using a `condition variable`, waking them to begin processing pizzas:
+#### 2. Kitchen Internal Communication
+- **Cook Management**: Each Kitchen manages cooks via thread pool (`std::vector<std::unique_ptr<Cook>>`)
+- **Order Queue**: Thread-safe order queue protected by mutexes (`std::queue<uint16_t> m_pizzaQueue`)
+- **Cook Notification**: Condition variables wake waiting Cook threads when new orders arrive
 
-        ```cpp
-        CondVar m_pizzaQueueCV;
-        ```
+#### 3. Kitchen to Reception Feedback Loop
+- **Completion Notifications**: Finished pizzas trigger `CookedPizza` messages to Reception
+- **Closure Signals**: Idle kitchens (5+ seconds without orders) send `Closed` messages before terminating
 
-3. **Kitchen to Reception Feedback Loop**
-    - <u> Completion Notifications </u>:
-    When a `Cook` finishes a `pizza`, the `Kitchen` sends a `CookedPizza` message to `Reception`.
+## ⚖️ Load Balancer
 
-        ```cpp
-        m_toReception->SendMessage(Message::CookedPizza{m_id, pizza.Pack()});
-        ```
-        - *this serializes then sends to the reception the id of the kitchen with the pizza type that has been completed*
+Reception periodically receives status updates from all Kitchens to monitor workload, ingredient levels, and idle time. The **Load Balancer** rearranges the kitchen vector using this priority algorithm:
 
-    - <u> Closure Signals </u>:
-    If a `Kitchen` becomes `idle` for too long, *no orders for 5 seconds*, it sends a `Closed` message to `Reception` before terminating. Upon receiving the message, `Reception` sends the `Closed` message back, allowing both the `Kitchen` to close itself safely and the `Reception` to finalize its processes properly."
+**Priority Order:** `idleCount` > `pizzaCount` > `pizzaTime` > `id`
 
+1. **Idle Count**: Number of inactive cooks
+2. **Pizza Count**: Current pizza queue size
+3. **Pizza Time**: Remaining cooking time for queued pizzas
+4. **ID**: Kitchen identifier (fallback sorting)
 
-# Load Balancer
+## ✨ Bonus Features
 
-As afermentioned, `Reception` periodically recieves status update messages from all `Kitchens` to monitor their workload, ingredient levels, and idle time. This information grants `Reception` the ability to properly distribute the pizza's. The `Load Balancer` rearranges the `kitchen vector` specifically with this priority method:
-<br><br>
-        ***idleCount*** *>* ***pizzaCount*** *>* ***pizzaTime*** *>* ***id***
-<br><br>
-It firsts checks to see how many `cooks` are `idle`( *not working*). If they are identical it check pizza amount found in each `kitchen`. If still identical it checks their `pizzaTime`, *the Time left to individually cook each pizza found in their queue*. Finally if they are truly identical, they are simply sorted by `id` number.
+This project contains additional features beyond curriculum requirements, notably a complete **graphical visualization** of the pizzeria experience.
 
-# Bonus Feature
+### Compilation
+Build with `make bonus` and execute normally. This compiles with the `PLAZZA_BONUS` conditional flag.
 
-This projects contains additional features not required by the cirriculum, notably the creation of a `window` to fully visualize the `pizzeria experience`.
+### Features
+1. **🖼️ Window Interface**: Full Reception visualization in dedicated window
+2. **🎨 Custom Assets**: Hand-crafted assets designed in Figma
+3. **🎵 Audio Integration**: Immersive pizzeria background music
+4. **📚 Kitchen Stacking Protocol**: Dynamic kitchen visualization stacking above Reception
+5. **📊 Real-time Kitchen Info**: Live display of chef count, pizza queue, and kitchen timer
 
-using the compiling method explained above. One simply needs to build with `make bonus` and execute the binary normally.
+## 📸 Gallery
 
-this will compile the base code with the conditional flag: ***PLAZZA_BONUS***, opening up access to brand new features.
+![](./Screenshots/plazza.png)
 
-1. ***Window Pop Up***: The first as mentioned is the creation of a `window` with the `reception` in full view
-2. ***Asset creation***: all of our assets are hand assembled in `Figma`
-3. ***Sound Integration***: You should also hear the wonderful pizzeria music in the background thanks to our music and `sound integration`.
-4. ***Kitchen Stacking Protocol***: By giving your pizza order in the `CLI` you will see all the `kitchens` stack ontop of the `reception`. they will appear and dissapear when in and out of use.
-5. ***Kitchen Info***: in the `kitchen` you can identify the amount of `chefs`, `pizza` amount as well as the `kitchen` Timer. counting down to the `kitchens` <span style="color: red;">death</span>.
+## 📄 License
 
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-<br>
-<br>
-<br>
+## 🤝 Contributing
 
-# ***CREDIT***
-***Mallory Scotton*** <br>
-***Nathan Fievet*** <br>
-***Hugo Cathelain*** <br>
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## 👥 Authors
+
+- **Mallory Scotton** - *Lead Developer*
+- **Nathan Fievet** - *Core Developer*  
+- **Hugo Cathelain** - *Core Developer*
+
+---
+
+*Coded with ❤️ by the Tekyo Drift team*
